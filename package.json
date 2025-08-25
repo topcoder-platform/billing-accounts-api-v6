@@ -1,0 +1,39 @@
+{
+  "name": "billing-accounts-api-v6",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Topcoder Billing Accounts & Clients API (NestJS + Prisma, CommonJS)",
+  "main": "dist/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "start": "node dist/main.js",
+    "lint": "echo \"(add eslint if desired)\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.3.0",
+    "@nestjs/config": "^3.2.0",
+    "@nestjs/core": "^10.3.0",
+    "@nestjs/mapped-types": "^2.1.0",
+    "@nestjs/platform-express": "^10.3.0",
+    "@prisma/client": "^5.18.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "dotenv": "^16.4.5",
+    "pino": "^9.0.0",
+    "prisma": "^5.18.0",
+    "reflect-metadata": "^0.1.13",
+    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v2.6.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "rimraf": "^5.0.7",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.5.4"
+  }
+}
