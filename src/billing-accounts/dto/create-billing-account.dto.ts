@@ -1,10 +1,16 @@
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateBillingAccountDto {
   @IsString() name!: string;
   @IsOptional() @IsString() projectId?: string;
   @IsOptional() @IsString() description?: string;
-  @IsOptional() @IsString() status?: 'ACTIVE' | 'INACTIVE';
+  @IsOptional() @IsString() status?: "ACTIVE" | "INACTIVE";
   @IsOptional() @IsDateString() startDate?: string;
   @IsOptional() @IsDateString() endDate?: string;
   @IsNumber() budget!: number;

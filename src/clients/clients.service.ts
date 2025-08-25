@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../common/prisma.service';
-import { Prisma } from '@prisma/client';
-import { QueryClientsDto } from './dto/query-clients.dto';
-import { UpdateClientDto } from './dto/update-client.dto';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../common/prisma.service";
+import { Prisma } from "@prisma/client";
+import { QueryClientsDto } from "./dto/query-clients.dto";
+import { UpdateClientDto } from "./dto/update-client.dto";
 
 @Injectable()
 export class ClientsService {
@@ -10,21 +10,27 @@ export class ClientsService {
 
   async list(q: QueryClientsDto) {
     const where: Prisma.ClientWhereInput = {
-      ...(q.name ? { name: { contains: q.name, mode: 'insensitive' } } : {}),
-      ...(q.codeName ? { codeName: { contains: q.codeName, mode: 'insensitive' } } : {}),
+      ...(q.name ? { name: { contains: q.name, mode: "insensitive" } } : {}),
+      ...(q.codeName
+        ? { codeName: { contains: q.codeName, mode: "insensitive" } }
+        : {}),
       ...(q.status ? { status: q.status } : {}),
-      ...(q.startDateFrom || q.startDateTo ? {
-        startDate: {
-          gte: q.startDateFrom ? new Date(q.startDateFrom) : undefined,
-          lte: q.startDateTo ? new Date(q.startDateTo) : undefined,
-        }
-      } : {}),
-      ...(q.endDateFrom || q.endDateTo ? {
-        endDate: {
-          gte: q.endDateFrom ? new Date(q.endDateFrom) : undefined,
-          lte: q.endDateTo ? new Date(q.endDateTo) : undefined,
-        }
-      } : {}),
+      ...(q.startDateFrom || q.startDateTo
+        ? {
+            startDate: {
+              gte: q.startDateFrom ? new Date(q.startDateFrom) : undefined,
+              lte: q.startDateTo ? new Date(q.startDateTo) : undefined,
+            },
+          }
+        : {}),
+      ...(q.endDateFrom || q.endDateTo
+        ? {
+            endDate: {
+              gte: q.endDateFrom ? new Date(q.endDateFrom) : undefined,
+              lte: q.endDateTo ? new Date(q.endDateTo) : undefined,
+            },
+          }
+        : {}),
     };
 
     const page = q.page || 1;
@@ -36,16 +42,26 @@ export class ClientsService {
         where,
         skip: (page - 1) * perPage,
         take: perPage,
-        orderBy: q.sortBy ? { [q.sortBy]: q.sortOrder || 'asc' } : { createdAt: 'desc' },
+        orderBy: q.sortBy
+          ? { [q.sortBy]: q.sortOrder || "asc" }
+          : { createdAt: "desc" },
       }),
     ]);
 
-    return { page, perPage, total, totalPages: Math.ceil(total / perPage), data: items };
+    return {
+      page,
+      perPage,
+      total,
+      totalPages: Math.ceil(total / perPage),
+      data: items,
+    };
   }
 
   async get(clientId: string) {
-    const client = await this.prisma.client.findUnique({ where: { id: clientId } });
-    if (!client) throw new NotFoundException('Client not found');
+    const client = await this.prisma.client.findUnique({
+      where: { id: clientId },
+    });
+    if (!client) throw new NotFoundException("Client not found");
     return client;
   }
 
@@ -56,8 +72,12 @@ export class ClientsService {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.codeName !== undefined ? { codeName: dto.codeName } : {}),
         ...(dto.status !== undefined ? { status: dto.status as any } : {}),
-        ...(dto.startDate !== undefined ? { startDate: dto.startDate ? new Date(dto.startDate) : null } : {}),
-        ...(dto.endDate !== undefined ? { endDate: dto.endDate ? new Date(dto.endDate) : null } : {}),
+        ...(dto.startDate !== undefined
+          ? { startDate: dto.startDate ? new Date(dto.startDate) : null }
+          : {}),
+        ...(dto.endDate !== undefined
+          ? { endDate: dto.endDate ? new Date(dto.endDate) : null }
+          : {}),
       },
     });
   }
