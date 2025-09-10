@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "type": "commonjs",
   "scripts": {
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" --fix",
