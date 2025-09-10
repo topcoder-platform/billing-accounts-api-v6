@@ -134,7 +134,7 @@ export class BillingAccountsService {
         consumedAmounts: true,
       },
     });
-    if (!ba) throw new NotFoundException("Billing account not found");
+    if (!ba) throw new NotFoundException(`Billing account with ID ${billingAccountId} not found`);
 
     const locked = ba.lockedAmounts.reduce(
       (sum, r) => sum + Number(r.amount),
