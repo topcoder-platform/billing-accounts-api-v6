@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "type": "commonjs",
   "scripts": {
-    "build": "prisma generate && nest build",
+    "build": "nest build",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" --fix",
@@ -30,7 +30,7 @@
     "prisma": "^5.18.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.7",
-    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v2.6.4"
+    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v3.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

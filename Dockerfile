@@ -21,11 +21,11 @@ RUN pnpm build
 
 # ---- Production Stage ----
 FROM base AS production
-ENV NODE_ENV=production
+ENV NODE_ENV production
 # Copy built application from the build stage
 COPY --from=build /usr/src/app/dist ./dist
-# Copy node_modules from the build stage so it includes the generated Prisma client
-COPY --from=build /usr/src/app/node_modules ./node_modules
+# Copy production dependencies from the deps stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 
 # Expose the application port
 EXPOSE 3000
