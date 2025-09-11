@@ -8,8 +8,8 @@ FROM base AS deps
 RUN npm install -g pnpm
 # Copy dependency-defining files
 COPY package.json pnpm-lock.yaml ./
-# Install dependencies
-RUN pnpm install --prod
+# Install all dependencies (include dev deps for build)
+RUN pnpm install
 
 # ---- Build Stage ----
 FROM base AS build
