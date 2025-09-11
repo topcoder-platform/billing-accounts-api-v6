@@ -8,8 +8,8 @@ FROM base AS deps
 RUN npm install -g pnpm
 # Copy dependency-defining files
 COPY package.json pnpm-lock.yaml ./
-# Install all dependencies (include dev deps for build)
-RUN pnpm install
+# Install dependencies
+RUN pnpm install --frozen-lockfile --prod
 
 # ---- Build Stage ----
 FROM base AS build
@@ -21,11 +21,11 @@ RUN pnpm build
 
 # ---- Production Stage ----
 FROM base AS production
-ENV NODE_ENV production
+ENV NODE_ENV=production
 # Copy built application from the build stage
 COPY --from=build /usr/src/app/dist ./dist
-# Copy node_modules from build stage to include generated Prisma client
-COPY --from=build /usr/src/app/node_modules ./node_modules
+# Copy production dependencies from the deps stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
 
 # Expose the application port
 EXPOSE 3000
