@@ -22,6 +22,8 @@ RUN pnpm build
 # ---- Production Stage ----
 FROM base AS production
 ENV NODE_ENV=production
+# Install OpenSSL runtime (provides libssl.so.3 for Prisma musl OpenSSL 3)
+RUN apk add --no-cache openssl
 # Copy built application from the build stage
 COPY --from=build /usr/src/app/dist ./dist
 # Copy production dependencies (including generated Prisma client) from the build stage
