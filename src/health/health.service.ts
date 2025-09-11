@@ -8,7 +8,7 @@ let checksRun = 0;
 export class HealthService {
   constructor(private readonly service: ClientsService) {}
 
-  async check(req, res) {
+  async check(): Promise<any> {
     // perform a quick database access operation, if there is no error and is quick, then consider it healthy;
     // there are just a few challenge types, so search challenge types should be efficient operation,
     // and it just searches a single challenge type, it should be quick operation
@@ -17,13 +17,9 @@ export class HealthService {
     try {
       await this.service.get('1');
     } catch (e) {
-      res.status(503).send({
-        checksRun,
-        message: `Error in DB access: ${e.message || e}. Timestamp: ${timestampMS}`,
-      });
-      return;
+      throw e;
     }
     // there is no error, and it is quick, then return checks run count
-    res.send({ checksRun });
+    return ({checksRun, timestamp: timestampMS})
   }
 }

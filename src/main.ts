@@ -14,6 +14,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.setGlobalPrefix("v6/billing-accounts");
 
   const config = app.get(ConfigService);
   // Swagger setup

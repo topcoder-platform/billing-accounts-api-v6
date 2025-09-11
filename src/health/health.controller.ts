@@ -11,7 +11,7 @@ export class HealthController {
   @ApiOperation({ summary: "Check the health of the service" })
   @ApiResponse({ status: 200, description: "Service is healthy." })
   @ApiResponse({ status: 503, description: "Service is unhealthy." })
-  check(req, res) {
-    return this.healthService.check(req, res);
+  check() : any {
+    return this.healthService.check();
   }
 }
