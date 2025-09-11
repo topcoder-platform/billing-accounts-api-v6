@@ -7,7 +7,7 @@
   "type": "commonjs",
   "scripts": {
     "build": "prisma generate && nest build",
-    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "start": "node dist/main.js",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "prisma:generate": "prisma generate",
@@ -19,6 +19,7 @@
     "@nestjs/config": "^3.2.0",
     "@nestjs/core": "^10.3.0",
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/swagger": "^7.4.2",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^10.3.0",
     "@prisma/client": "^5.18.0",
@@ -30,6 +31,7 @@
     "prisma": "^5.18.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.7",
+    "swagger-ui-express": "^5.0.0",
     "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v3.0.1"
   },
   "devDependencies": {

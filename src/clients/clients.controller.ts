@@ -15,7 +15,18 @@ import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ScopesGuard } from "../auth/guards/scopes.guard";
 import { SCOPES, ADMIN_ROLE } from "../auth/constants";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiOkResponse,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+  ApiBody,
+} from "@nestjs/swagger";
 
+@ApiTags("Clients")
+@ApiBearerAuth()
 @Controller("clients")
 export class ClientsController {
   constructor(private readonly service: ClientsService) {}
@@ -24,6 +35,19 @@ export class ClientsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT)
+  @ApiOperation({ summary: "List clients", description: "Returns paginated list of clients" })
+  @ApiOkResponse({ description: "Paginated list of clients returned" })
+  @ApiQuery({ name: "name", required: false })
+  @ApiQuery({ name: "codeName", required: false })
+  @ApiQuery({ name: "status", required: false, enum: ["ACTIVE", "INACTIVE"] })
+  @ApiQuery({ name: "startDateFrom", required: false, type: String })
+  @ApiQuery({ name: "startDateTo", required: false, type: String })
+  @ApiQuery({ name: "endDateFrom", required: false, type: String })
+  @ApiQuery({ name: "endDateTo", required: false, type: String })
+  @ApiQuery({ name: "sortBy", required: false, enum: ["name", "startDate", "endDate", "status", "createdAt"] })
+  @ApiQuery({ name: "sortOrder", required: false, enum: ["asc", "desc"] })
+  @ApiQuery({ name: "page", required: false, type: Number })
+  @ApiQuery({ name: "perPage", required: false, type: Number })
   async list(@Query() q: QueryClientsDto) {
     return this.service.list(q);
   }
@@ -32,6 +56,9 @@ export class ClientsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT)
+  @ApiOperation({ summary: "Get a client by ID" })
+  @ApiOkResponse({ description: "Client found and returned" })
+  @ApiParam({ name: "clientId", description: "Client ID" })
   async get(@Param("clientId") id: string) {
     return this.service.get(id);
   }
@@ -40,6 +67,10 @@ export class ClientsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.UPDATE_CLIENT, SCOPES.ALL_CLIENT)
+  @ApiOperation({ summary: "Update a client" })
+  @ApiOkResponse({ description: "Client updated" })
+  @ApiParam({ name: "clientId", description: "Client ID" })
+  @ApiBody({ type: UpdateClientDto })
   async update(@Param("clientId") id: string, @Body() dto: UpdateClientDto) {
     return this.service.update(id, dto);
   }
