@@ -10,9 +10,9 @@ import { HealthModule } from "./health/health.module";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    HealthModule,
     BillingAccountsModule,
     ClientsModule,
-    HealthModule,
   ],
 })
 export class AppModule implements NestModule {
