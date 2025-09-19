@@ -7,6 +7,26 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const allowedDomains = ["topcoder.com", "topcoder-dev.com"];
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+      try {
+        const hostname = new URL(origin).hostname;
+        const isAllowed = allowedDomains.some(
+          (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+        );
+        return isAllowed
+          ? callback(null, true)
+          : callback(new Error("Origin not allowed by CORS"));
+      } catch (err) {
+        return callback(err as Error);
+      }
+    },
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
