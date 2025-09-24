@@ -38,12 +38,37 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   // Swagger setup
+  const swaggerDescription = [
+    "API documentation for Billing Accounts & Clients.",
+    "",
+    "**Authentication**",
+    "- JWT bearer tokens (user tokens) must include the roles listed per endpoint.",
+    "- Machine-to-machine bearer tokens must include the scopes listed per endpoint.",
+  ].join("\n");
+
   const swaggerConfig = new DocumentBuilder()
     .setTitle("Billing Accounts API")
-    .setDescription("API documentation for Billing Accounts & Clients")
+    .setDescription(swaggerDescription)
     .setVersion("1.0.0")
     .setBasePath("v6/billing-accounts")
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "User JWT token with role claims (e.g. administrator, copilot).",
+      },
+      "JWT",
+    )
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Machine-to-machine token that carries the required scopes in `scope`.",
+      },
+      "M2M",
+    )
     .build();
   const swaggerDoc = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup("/v6/billing-accounts/api-docs", app, swaggerDoc);

@@ -19,6 +19,7 @@ import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ScopesGuard } from "../auth/guards/scopes.guard";
 import { SCOPES, ADMIN_ROLE, COPILOT_ROLE } from "../auth/constants";
+import { buildOperationDoc } from "../common/swagger/swagger-auth.util";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -30,7 +31,8 @@ import {
 } from "@nestjs/swagger";
 
 @ApiTags("Billing Accounts")
-@ApiBearerAuth()
+@ApiBearerAuth("JWT")
+@ApiBearerAuth("M2M")
 @Controller("billing-accounts")
 export class BillingAccountsController {
   constructor(private readonly service: BillingAccountsService) {}
@@ -39,7 +41,14 @@ export class BillingAccountsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE, COPILOT_ROLE)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
-  @ApiOperation({ summary: "List billing accounts", description: "Returns paginated list of billing accounts" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "List billing accounts",
+      description: "Retrieve billing accounts with optional filters, sorting, and pagination.",
+      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
+    }),
+  )
   @ApiOkResponse({ description: "Paginated list of billing accounts returned" })
   @ApiQuery({ name: "clientId", required: false })
   @ApiQuery({ name: "userId", required: false })
@@ -56,7 +65,14 @@ export class BillingAccountsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.CREATE_BA, SCOPES.ALL_BA)
-  @ApiOperation({ summary: "Create a billing account" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Create a billing account",
+      description: "Create a new billing account with the provided project and budget details.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.CREATE_BA, SCOPES.ALL_BA],
+    }),
+  )
   @ApiOkResponse({ description: "Billing account created" })
   @ApiBody({ type: CreateBillingAccountDto })
   async create(@Body() dto: CreateBillingAccountDto) {
@@ -67,7 +83,14 @@ export class BillingAccountsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE, COPILOT_ROLE)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
-  @ApiOperation({ summary: "Get a billing account by ID" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Get a billing account",
+      description: "Fetch a billing account by its identifier, including budget and client data.",
+      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
+    }),
+  )
   @ApiOkResponse({ description: "Billing account returned" })
   @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
   async get(@Param("billingAccountId") id: string) {
@@ -78,7 +101,14 @@ export class BillingAccountsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
-  @ApiOperation({ summary: "Update a billing account" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Update a billing account",
+      description: "Update billing account metadata or budget details.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
+    }),
+  )
   @ApiOkResponse({ description: "Billing account updated" })
   @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
   @ApiBody({ type: UpdateBillingAccountDto })
@@ -93,7 +123,14 @@ export class BillingAccountsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
-  @ApiOperation({ summary: "Lock an amount for a challenge" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Lock funds for a challenge",
+      description: "Reserve an amount on a billing account for a specific challenge.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
+    }),
+  )
   @ApiOkResponse({ description: "Lock created/updated or unlocked" })
   @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
   @ApiBody({ type: LockAmountDto })
@@ -108,7 +145,14 @@ export class BillingAccountsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
-  @ApiOperation({ summary: "Consume an amount for a challenge" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Consume reserved funds",
+      description: "Consume a previously locked amount for a challenge and record the transaction.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
+    }),
+  )
   @ApiOkResponse({ description: "Consumed amount recorded" })
   @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
   @ApiBody({ type: ConsumeAmountDto })

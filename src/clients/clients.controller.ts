@@ -15,6 +15,7 @@ import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ScopesGuard } from "../auth/guards/scopes.guard";
 import { SCOPES, ADMIN_ROLE } from "../auth/constants";
+import { buildOperationDoc } from "../common/swagger/swagger-auth.util";
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -26,7 +27,8 @@ import {
 } from "@nestjs/swagger";
 
 @ApiTags("Clients")
-@ApiBearerAuth()
+@ApiBearerAuth("JWT")
+@ApiBearerAuth("M2M")
 @Controller("clients")
 export class ClientsController {
   constructor(private readonly service: ClientsService) {}
@@ -35,7 +37,14 @@ export class ClientsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT)
-  @ApiOperation({ summary: "List clients", description: "Returns paginated list of clients" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "List clients",
+      description: "Retrieve clients with optional filters, sorting, and pagination.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT],
+    }),
+  )
   @ApiOkResponse({ description: "Paginated list of clients returned" })
   @ApiQuery({ name: "name", required: false })
   @ApiQuery({ name: "codeName", required: false })
@@ -56,7 +65,14 @@ export class ClientsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT)
-  @ApiOperation({ summary: "Get a client by ID" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Get a client",
+      description: "Fetch a client by its identifier, including billing accounts and metadata.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT],
+    }),
+  )
   @ApiOkResponse({ description: "Client found and returned" })
   @ApiParam({ name: "clientId", description: "Client ID" })
   async get(@Param("clientId") id: string) {
@@ -67,7 +83,14 @@ export class ClientsController {
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.UPDATE_CLIENT, SCOPES.ALL_CLIENT)
-  @ApiOperation({ summary: "Update a client" })
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Update a client",
+      description: "Update client metadata, billing account associations, or status.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.UPDATE_CLIENT, SCOPES.ALL_CLIENT],
+    }),
+  )
   @ApiOkResponse({ description: "Client updated" })
   @ApiParam({ name: "clientId", description: "Client ID" })
   @ApiBody({ type: UpdateClientDto })
