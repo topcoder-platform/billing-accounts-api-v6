@@ -7,6 +7,7 @@ import {
   Post,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { BillingAccountsService } from "./billing-accounts.service";
 import { QueryBillingAccountsDto } from "./dto/query-billing-accounts.dto";
@@ -92,8 +93,8 @@ export class BillingAccountsController {
     }),
   )
   @ApiOkResponse({ description: "Billing account returned" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
-  async get(@Param("billingAccountId") id: string) {
+  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  async get(@Param("billingAccountId", ParseIntPipe) id: number) {
     return this.service.get(id);
   }
 
@@ -110,10 +111,10 @@ export class BillingAccountsController {
     }),
   )
   @ApiOkResponse({ description: "Billing account updated" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
+  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
   @ApiBody({ type: UpdateBillingAccountDto })
   async update(
-    @Param("billingAccountId") id: string,
+    @Param("billingAccountId", ParseIntPipe) id: number,
     @Body() dto: UpdateBillingAccountDto,
   ) {
     return this.service.update(id, dto);
@@ -132,10 +133,10 @@ export class BillingAccountsController {
     }),
   )
   @ApiOkResponse({ description: "Lock created/updated or unlocked" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
+  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
   @ApiBody({ type: LockAmountDto })
   async lock(
-    @Param("billingAccountId") id: string,
+    @Param("billingAccountId", ParseIntPipe) id: number,
     @Body() dto: LockAmountDto,
   ) {
     return this.service.lockAmount(id, dto);
@@ -154,10 +155,10 @@ export class BillingAccountsController {
     }),
   )
   @ApiOkResponse({ description: "Consumed amount recorded" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID" })
+  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
   @ApiBody({ type: ConsumeAmountDto })
   async consume(
-    @Param("billingAccountId") id: string,
+    @Param("billingAccountId", ParseIntPipe) id: number,
     @Body() dto: ConsumeAmountDto,
   ) {
     return this.service.consumeAmount(id, dto);

@@ -33,7 +33,7 @@ enum ClientStatus {
 }
 
 model BillingAccount {
-  id              String   @id @default(uuid())
+  id              Int      @id @default(autoincrement())
   projectId       String?
   name            String
   description     String?
@@ -71,7 +71,7 @@ enum BAStatus {
 
 model LockedAmount {
   id              String   @id @default(uuid())
-  billingAccountId String
+  billingAccountId Int
   challengeId     String   // UUID or legacy int-as-string
   amount          Decimal  @db.Decimal(20,4)
   createdAt       DateTime @default(now())
@@ -85,7 +85,7 @@ model LockedAmount {
 
 model ConsumedAmount {
   id              String   @id @default(uuid())
-  billingAccountId String
+  billingAccountId Int
   challengeId     String
   amount          Decimal  @db.Decimal(20,4)
   createdAt       DateTime @default(now())
@@ -100,7 +100,7 @@ model ConsumedAmount {
 // Optional: whitelist which users can access which BAs for userId filtering
 model BillingAccountAccess {
   id              String   @id @default(uuid())
-  billingAccountId String
+  billingAccountId Int
   userId          String
   createdAt       DateTime @default(now())
 

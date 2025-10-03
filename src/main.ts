@@ -7,7 +7,14 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const allowedDomains = ["topcoder.com", "topcoder-dev.com"];
+  // Allow Topcoder domains and localhost for local development
+  const allowedDomains = [
+    "topcoder.com",
+    "topcoder-dev.com",
+    // Local dev hosts
+    "localhost",
+    "127.0.0.1",
+  ];
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) {

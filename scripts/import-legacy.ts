@@ -134,7 +134,7 @@ async function importProjects(items: LegacyProject[], defaultClientId: string) {
 
   for (const p of items) {
     try {
-      const id = String(p.project_id);
+      const id = Number(p.project_id);
       let clientId = p.client_id != null ? String(p.client_id) : defaultClientId;
 
       // Guarantee client exists (fallback created earlier)
@@ -194,7 +194,7 @@ async function importChallengeBudgets(items: LegacyChallengeBudget[]) {
   let locks = 0, consumes = 0, skipped = 0;
 
   for (const r of items) {
-    const billingAccountId = String(r.project_id);
+    const billingAccountId = Number(r.project_id);
     const challengeId = String(r.challenge_id);
     const locked = toDecimalOrZero(r.locked_amount);
     const consumed = toDecimalOrZero(r.consumed_amount);
@@ -288,6 +288,13 @@ async function main() {
   if (clients.length) await importClients(clients);
   if (projects.length) await importProjects(projects, defaultClientId);
   if (budgets.length)  await importChallengeBudgets(budgets);
+
+  // Ensure the BillingAccount sequence is aligned to the max(id)
+  try {
+    await prisma.$executeRaw`SELECT setval(pg_get_serial_sequence('"BillingAccount"', 'id'), COALESCE((SELECT MAX(id) FROM "BillingAccount"), 0))`;
+  } catch (e: any) {
+    console.warn('Warning: could not align BillingAccount id sequence:', e?.message || e);
+  }
 
   console.log('Import complete.');
 }

@@ -3,6 +3,7 @@
 **Project structure:**
 - NestJS project
 - Prisma schema for Clients, Billing Accounts, Locked & Consumed amounts
+  - BillingAccount `id` is a Postgres `INT` auto-increment sequence (numeric, increasing)
 - Endpoints:
   - `GET /billing-accounts` 
   - `POST /billing-accounts` 

@@ -125,7 +125,7 @@ export class BillingAccountsService {
     });
   }
 
-  async get(billingAccountId: string) {
+  async get(billingAccountId: number) {
     const ba = await this.prisma.billingAccount.findUnique({
       where: { id: billingAccountId },
       include: {
@@ -154,7 +154,7 @@ export class BillingAccountsService {
     };
   }
 
-  async update(billingAccountId: string, dto: UpdateBillingAccountDto) {
+  async update(billingAccountId: number, dto: UpdateBillingAccountDto) {
     return this.prisma.billingAccount.update({
       where: { id: billingAccountId },
       data: {
@@ -198,7 +198,7 @@ export class BillingAccountsService {
     });
   }
 
-  async lockAmount(billingAccountId: string, dto: LockAmountDto) {
+  async lockAmount(billingAccountId: number, dto: LockAmountDto) {
     // If amount is 0, unlock (delete any lock)
     return this.prisma.$transaction(async (tx) => {
       // ensure no consumed record exists
@@ -242,7 +242,7 @@ export class BillingAccountsService {
     });
   }
 
-  async consumeAmount(billingAccountId: string, dto: ConsumeAmountDto) {
+  async consumeAmount(billingAccountId: number, dto: ConsumeAmountDto) {
     return this.prisma.$transaction(async (tx) => {
       // delete any lock first for this challenge
       await tx.lockedAmount.deleteMany({
