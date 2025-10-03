@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Param,
   Patch,
   Query,
@@ -10,6 +11,7 @@ import {
 import { ClientsService } from "./clients.service";
 import { QueryClientsDto } from "./dto/query-clients.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
+import { CreateClientDto, CreateClientRequestDto } from "./dto/create-client.dto";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -77,6 +79,41 @@ export class ClientsController {
   @ApiParam({ name: "clientId", description: "Client ID" })
   async get(@Param("clientId") id: string) {
     return this.service.get(id);
+  }
+
+  @Post()
+  @UseGuards(RolesGuard, ScopesGuard)
+  @Roles(ADMIN_ROLE)
+  @Scopes(SCOPES.CREATE_CLIENT, SCOPES.ALL_CLIENT)
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Create a client",
+      description: "Create a new client with optional code name, dates, and status.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.CREATE_CLIENT, SCOPES.ALL_CLIENT],
+    }),
+  )
+  @ApiOkResponse({ description: "Client created" })
+  @ApiBody({
+    description: 'Payload wrapper with "param" containing client details.',
+    type: CreateClientRequestDto,
+    examples: {
+      default: {
+        value: {
+          param: {
+            endDate: "2025-10-30T13:00Z",
+            startDate: "2025-09-30T14:00Z",
+            name: "Justin Test",
+            codeName: "Code name",
+            status: "ACTIVE",
+          },
+        },
+      },
+    },
+  })
+  async create(@Body() body: CreateClientRequestDto) {
+    const dto: CreateClientDto = body.param;
+    return this.service.create(dto);
   }
 
   @Patch(":clientId")
