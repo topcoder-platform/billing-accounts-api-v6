@@ -34,3 +34,18 @@ pnpm run dev
 # or
 pnpm run build && pnpm start
 ```
+
+## Import scripts
+
+- Legacy import (clients, billing accounts, challenge budgets):
+  - `pnpm run import:legacy -- <file1.json> [file2.json ...] [--defaultClientId=<id>]`
+
+- BillingAccountAccess import (from time_oltp exports):
+  - Requires `MEMBER_DB_URL` in `.env` pointing to the Members DB.
+  - Usage:
+    - `pnpm run import:access -- /mnt/export/billing_accounts/time_oltp:project_manager_1.json /mnt/export/billing_accounts/time_oltp:user_account_1.json`
+  - The script will:
+    - Read `time_oltp:project_manager` and `time_oltp:user_account` records
+    - For each project manager row, map `project_id` to `BillingAccountAccess.billingAccountId`
+    - Lookup the matching `user_account` by `user_account_id`, then query the Members DB by `user_name` (handle)
+    - Upsert `BillingAccountAccess` for the resolved `userId`
