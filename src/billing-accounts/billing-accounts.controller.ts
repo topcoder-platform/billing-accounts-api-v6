@@ -213,8 +213,14 @@ export class BillingAccountsController {
           properties: { userId: { type: 'string' } },
           required: ['userId'],
         },
+        userId: { type: 'string' },
       },
       required: ['param'],
+      example: {
+        param: {
+          userId: "12345678",
+        },
+      },
     },
   })
   async addUser(
