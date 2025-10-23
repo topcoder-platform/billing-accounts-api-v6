@@ -6,6 +6,7 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { ROLES_KEY } from "../decorators/roles.decorator";
 import { SCOPES_KEY } from "../decorators/scopes.decorator";
 
 @Injectable()
@@ -32,7 +33,25 @@ export class ScopesGuard implements CanActivate {
           .filter(Boolean);
 
     const ok = required.every((s) => scopes.includes(s));
-    if (!ok) throw new ForbiddenException("Missing required scope(s)");
-    return true;
+    if (ok) return true;
+
+    const fallbackRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (fallbackRoles && fallbackRoles.length > 0) {
+      const roles: string[] = Array.isArray(user.roles)
+        ? user.roles
+        : (user.roles || user.role || "")
+            .split(",")
+            .map((r: string) => r.trim())
+            .filter(Boolean);
+
+      const roleOk = roles.some((r: string) => fallbackRoles.includes(r));
+      if (roleOk) return true;
+    }
+
+    throw new ForbiddenException("Missing required role or scope");
   }
 }

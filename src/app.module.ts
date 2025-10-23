@@ -4,11 +4,13 @@ import { PrismaModule } from "./common/prisma.module";
 import { AuthMiddleware } from "./auth/auth.middleware";
 import { BillingAccountsModule } from "./billing-accounts/billing-accounts.module";
 import { ClientsModule } from "./clients/clients.module";
+import { HealthModule } from "./health/health.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    HealthModule,
     BillingAccountsModule,
     ClientsModule,
   ],

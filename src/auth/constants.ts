@@ -11,5 +11,5 @@ export const SCOPES = {
   ALL_CLIENT: "all:client",
 };
 
-export const ADMIN_ROLE = "Administrator";
-export const COPILOT_ROLE = "Copilot";
+export const ADMIN_ROLE = "administrator";
+export const COPILOT_ROLE = "copilot";

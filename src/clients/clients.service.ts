@@ -3,6 +3,7 @@ import { PrismaService } from "../common/prisma.service";
 import { Prisma } from "@prisma/client";
 import { QueryClientsDto } from "./dto/query-clients.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
+import { CreateClientDto } from "./dto/create-client.dto";
 
 @Injectable()
 export class ClientsService {
@@ -78,6 +79,18 @@ export class ClientsService {
         ...(dto.endDate !== undefined
           ? { endDate: dto.endDate ? new Date(dto.endDate) : null }
           : {}),
+      },
+    });
+  }
+
+  async create(dto: CreateClientDto) {
+    return this.prisma.client.create({
+      data: {
+        name: dto.name,
+        codeName: dto.codeName,
+        status: (dto.status || "ACTIVE") as any,
+        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+        endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       },
     });
   }

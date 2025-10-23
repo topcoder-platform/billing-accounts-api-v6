@@ -6,16 +6,25 @@ import { CreateBillingAccountDto } from "./dto/create-billing-account.dto";
 import { UpdateBillingAccountDto } from "./dto/update-billing-account.dto";
 import { LockAmountDto } from "./dto/lock-amount.dto";
 import { ConsumeAmountDto } from "./dto/consume-amount.dto";
+import { MembersLookupService } from "../common/members-lookup.service";
 
 @Injectable()
 export class BillingAccountsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly membersLookup: MembersLookupService,
+  ) {}
 
   async list(q: QueryBillingAccountsDto) {
     const {
       clientId,
       userId,
       status,
+      name,
+      startDateFrom,
+      startDateTo,
+      endDateFrom,
+      endDateTo,
       page = 1,
       perPage = 20,
       sortBy,
@@ -29,6 +38,24 @@ export class BillingAccountsService {
 
     if (userId) {
       where.accessGrants = { some: { userId } };
+    }
+
+    if (name) {
+      where.name = { contains: name, mode: "insensitive" } as any;
+    }
+
+    if (startDateFrom || startDateTo) {
+      where.startDate = {
+        ...(startDateFrom ? { gte: new Date(startDateFrom) } : {}),
+        ...(startDateTo ? { lte: new Date(startDateTo) } : {}),
+      } as any;
+    }
+
+    if (endDateFrom || endDateTo) {
+      where.endDate = {
+        ...(endDateFrom ? { gte: new Date(endDateFrom) } : {}),
+        ...(endDateTo ? { lte: new Date(endDateTo) } : {}),
+      } as any;
     }
 
     // Fetch page
@@ -125,7 +152,7 @@ export class BillingAccountsService {
     });
   }
 
-  async get(billingAccountId: string) {
+  async get(billingAccountId: number) {
     const ba = await this.prisma.billingAccount.findUnique({
       where: { id: billingAccountId },
       include: {
@@ -134,7 +161,7 @@ export class BillingAccountsService {
         consumedAmounts: true,
       },
     });
-    if (!ba) throw new NotFoundException("Billing account not found");
+    if (!ba) throw new NotFoundException(`Billing account with ID ${billingAccountId} not found`);
 
     const locked = ba.lockedAmounts.reduce(
       (sum, r) => sum + Number(r.amount),
@@ -154,7 +181,7 @@ export class BillingAccountsService {
     };
   }
 
-  async update(billingAccountId: string, dto: UpdateBillingAccountDto) {
+  async update(billingAccountId: number, dto: UpdateBillingAccountDto) {
     return this.prisma.billingAccount.update({
       where: { id: billingAccountId },
       data: {
@@ -198,7 +225,7 @@ export class BillingAccountsService {
     });
   }
 
-  async lockAmount(billingAccountId: string, dto: LockAmountDto) {
+  async lockAmount(billingAccountId: number, dto: LockAmountDto) {
     // If amount is 0, unlock (delete any lock)
     return this.prisma.$transaction(async (tx) => {
       // ensure no consumed record exists
@@ -242,7 +269,7 @@ export class BillingAccountsService {
     });
   }
 
-  async consumeAmount(billingAccountId: string, dto: ConsumeAmountDto) {
+  async consumeAmount(billingAccountId: number, dto: ConsumeAmountDto) {
     return this.prisma.$transaction(async (tx) => {
       // delete any lock first for this challenge
       await tx.lockedAmount.deleteMany({
@@ -266,5 +293,63 @@ export class BillingAccountsService {
       });
       return rec;
     });
+  }
+
+  /**
+   * List users (resources) assigned to a billing account.
+   * Returns minimal objects including handle (as name) for UI consumption.
+   */
+  async listUsers(billingAccountId: number) {
+    const access = await this.prisma.billingAccountAccess.findMany({
+      where: { billingAccountId },
+      orderBy: { createdAt: "asc" },
+    });
+    const userIds = access.map((a) => a.userId);
+    const handleMap = await this.membersLookup.getHandlesByUserIds(userIds);
+
+    // Map to UI shape: id (seq), name (handle), status (static 'active')
+    return access.map((a, idx) => ({
+      id: idx + 1,
+      name: handleMap.get(a.userId) || a.userId,
+      status: "active",
+    }));
+  }
+
+  /**
+   * Grant access to a user (add as resource) on a billing account.
+   */
+  async addUser(billingAccountId: number, userId: string) {
+    await this.prisma.billingAccountAccess.upsert({
+      where: { ba_access_unique: { billingAccountId, userId } },
+      create: { billingAccountId, userId, createdAt: new Date() },
+      update: {},
+    });
+    // Return a single-item shape consistent with list response
+    const handles = await this.membersLookup.getHandlesByUserIds([userId]);
+    return {
+      id: 1,
+      name: handles.get(userId) || userId,
+      status: "active",
+    };
+  }
+
+  /**
+   * Revoke access for a user on a billing account.
+   */
+  async removeUser(billingAccountId: number, userId: string) {
+    await this.prisma.billingAccountAccess.deleteMany({
+      where: { billingAccountId, userId },
+    });
+    return { removed: true };
+  }
+
+  /**
+   * Check whether a user has access to a billing account.
+   */
+  async hasAccess(billingAccountId: number, userId: string) {
+    const count = await this.prisma.billingAccountAccess.count({
+      where: { billingAccountId, userId },
+    });
+    return { hasAccess: count > 0 };
   }
 }

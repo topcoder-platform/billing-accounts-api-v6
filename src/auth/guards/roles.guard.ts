@@ -7,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorators/roles.decorator";
+import { SCOPES_KEY } from "../decorators/scopes.decorator";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -32,7 +33,25 @@ export class RolesGuard implements CanActivate {
           .filter(Boolean);
 
     const ok = roles.some((r: string) => required.includes(r));
-    if (!ok) throw new ForbiddenException("Insufficient role");
-    return true;
+    if (ok) return true;
+
+    const fallbackScopes = this.reflector.getAllAndOverride<string[]>(
+      SCOPES_KEY,
+      [context.getHandler(), context.getClass()]
+    );
+
+    if (fallbackScopes && fallbackScopes.length > 0) {
+      const scopes: string[] = Array.isArray(user.scopes)
+        ? user.scopes
+        : (user.scope || "")
+            .split(" ")
+            .map((s: string) => s.trim())
+            .filter(Boolean);
+
+      const scopeOk = fallbackScopes.every((s) => scopes.includes(s));
+      if (scopeOk) return true;
+    }
+
+    throw new ForbiddenException("Insufficient role or scope");
   }
 }
