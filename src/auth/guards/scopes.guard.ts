@@ -32,7 +32,7 @@ export class ScopesGuard implements CanActivate {
           .map((s: string) => s.trim())
           .filter(Boolean);
 
-    const ok = required.every((s) => scopes.includes(s));
+    const ok = required.some((s) => scopes.includes(s));
     if (ok) return true;
 
     const fallbackRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
