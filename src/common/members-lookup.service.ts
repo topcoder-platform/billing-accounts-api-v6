@@ -20,7 +20,14 @@ export class MembersLookupService {
       return;
     }
     // Create a dedicated Prisma client targeting the members DB
-    this.client = new PrismaClient({ datasources: { db: { url } } });
+    this.client = new PrismaClient({
+      transactionOptions: {
+        timeout: process.env.BA_SERVICE_PRISMA_TIMEOUT
+          ? parseInt(process.env.BA_SERVICE_PRISMA_TIMEOUT, 10)
+          : 10000,
+      },
+      datasources: { db: { url } }
+    });
     this.initialized = true;
   }
 
