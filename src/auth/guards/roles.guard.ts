@@ -48,7 +48,7 @@ export class RolesGuard implements CanActivate {
             .map((s: string) => s.trim())
             .filter(Boolean);
 
-      const scopeOk = fallbackScopes.every((s) => scopes.includes(s));
+      const scopeOk = fallbackScopes.some((s) => scopes.includes(s));
       if (scopeOk) return true;
     }
 
