@@ -14,7 +14,8 @@
     "prisma:migrate": "prisma migrate dev --name init",
     "import:legacy": "ts-node scripts/import-legacy.ts",
     "import:access": "ts-node scripts/import-ba-access.ts",
-    "import:markup": "ts-node scripts/import-markup.ts"
+    "import:markup": "ts-node scripts/import-markup.ts",
+    "backfill:clientIds": "ts-node scripts/backfill-client-ids.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
