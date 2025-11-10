@@ -7,13 +7,15 @@ import * as path from 'path';
 const PLACEHOLDER_CLIENT_ID = 'legacy-unknown-client';
 const CHUNK_SIZE = 500;
 
-type LegacyProjectRecord = {
+const CLIENT_PROJECT_KEY = 'time_oltp:client_project';
+
+type LegacyClientProjectRecord = {
   project_id?: string | number | null;
   client_id?: string | number | null;
 };
 
-type LegacyProjectBundle = {
-  ['time_oltp:project']?: LegacyProjectRecord[];
+type LegacyClientProjectBundle = {
+  [CLIENT_PROJECT_KEY]?: LegacyClientProjectRecord[];
 };
 
 type Stats = {
@@ -28,7 +30,7 @@ type Stats = {
 const prisma = new PrismaClient();
 
 function usage(): never {
-  console.error('Usage: npm run backfill:clientIds -- <time_oltp:project_*.json> [moreFiles...]');
+  console.error('Usage: npm run backfill:clientIds -- <time_oltp:client_project_*.json> [moreFiles...]');
   process.exit(1);
 }
 
@@ -65,14 +67,14 @@ function readMappingsFromFiles(files: string[]): Map<number, string> {
       throw new Error(`File not found: ${file}`);
     }
     const raw = fs.readFileSync(abs, 'utf8');
-    let parsed: LegacyProjectBundle;
+    let parsed: LegacyClientProjectBundle;
     try {
       parsed = JSON.parse(raw);
     } catch (err) {
       throw new Error(`Invalid JSON in ${file}: ${(err as Error).message}`);
     }
-    const projects = parsed['time_oltp:project'] ?? [];
-    console.log(`Loaded ${projects.length} project record(s) from ${file}.`);
+    const projects = parsed[CLIENT_PROJECT_KEY] ?? [];
+    console.log(`Loaded ${projects.length} client_project record(s) from ${file}.`);
     for (const project of projects) {
       const projectId = normalizeProjectId(project.project_id);
       const clientId = normalizeClientId(project.client_id);
@@ -104,7 +106,7 @@ async function main() {
   const projectToClient = readMappingsFromFiles(args);
 
   if (projectToClient.size === 0) {
-    console.log('No project rows contained a usable client_id value. Nothing to update.');
+    console.log('No client_project rows contained a usable client_id value. Nothing to update.');
     await prisma.$disconnect();
     return;
   }
