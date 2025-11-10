@@ -13,7 +13,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "import:legacy": "ts-node scripts/import-legacy.ts",
-    "import:access": "ts-node scripts/import-ba-access.ts"
+    "import:access": "ts-node scripts/import-ba-access.ts",
+    "import:markup": "ts-node scripts/import-markup.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
