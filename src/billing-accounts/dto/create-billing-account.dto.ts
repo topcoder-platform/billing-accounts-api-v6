@@ -16,6 +16,11 @@ export class CreateBillingAccountDto {
   @IsString()
   description?: string;
 
+  @ApiPropertyOptional({ example: "Globex Corporation" })
+  @IsOptional()
+  @IsString()
+  subcontractingEndCustomer?: string;
+
   @ApiPropertyOptional({ enum: ["ACTIVE", "INACTIVE"], example: "ACTIVE" })
   @IsOptional()
   @IsString()

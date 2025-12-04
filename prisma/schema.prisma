@@ -37,6 +37,7 @@ model BillingAccount {
   projectId       String?
   name            String
   description     String?
+  subcontractingEndCustomer String? @db.VarChar(255)
   status          BAStatus   @default(ACTIVE)
   startDate       DateTime?
   endDate         DateTime?
