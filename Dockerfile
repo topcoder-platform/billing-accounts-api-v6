@@ -29,6 +29,7 @@ COPY --from=build /usr/src/app/dist ./dist
 # Copy production dependencies (including generated Prisma client) from the build stage
 COPY --from=build /usr/src/app/node_modules ./node_modules
 
+COPY --from=build /usr/src/prisma ./prisma
 # Expose the application port
 EXPOSE 3000
 
