@@ -32,5 +32,10 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 # Expose the application port
 EXPOSE 3000
 
-# The command to run the application
-CMD ["node", "dist/main.js"]
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Use entrypoint to run migrations at startup (not build time)
+# Prisma uses PostgreSQL advisory locks to prevent concurrent migrations
+ENTRYPOINT ["/entrypoint.sh"]
+
