@@ -33,6 +33,7 @@ COPY --from=build /usr/src/app/prisma ./prisma
 # Expose the application port
 EXPOSE 3000
 
+RUN pnpm prisma:generate
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
