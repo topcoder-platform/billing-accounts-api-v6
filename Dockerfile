@@ -32,7 +32,7 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 # Expose the application port
 EXPOSE 3000
 
-COPY docker/entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Use entrypoint to run migrations at startup (not build time)
