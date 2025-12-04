@@ -18,6 +18,7 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY . .
 # Build the application
 RUN pnpm build
+RUN pnpm prisma:generate
 
 # ---- Production Stage ----
 FROM base AS production
@@ -32,8 +33,6 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/prisma ./prisma
 # Expose the application port
 EXPOSE 3000
-
-RUN pnpm prisma:generate
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
