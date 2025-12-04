@@ -22,4 +22,4 @@ fi
 
 # Start the application
 echo "Starting application server..."
-exec node /dist/main.js
+exec node /billing-accounts-api-v6/dist/main.js
