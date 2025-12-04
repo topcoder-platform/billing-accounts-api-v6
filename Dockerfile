@@ -1,27 +1,31 @@
-# Use the base image with Node.js
-FROM node:22.19-alpine
-# Ensure OpenSSL is present so Prisma can pick correct engine binaries
-RUN apk add --update --no-cache openssh-client git openssl
-# Copy the current directory into the Docker image
-COPY . /billing-accounts-api-v6
+# ---- Base Stage ----
+FROM node:22.19-alpine AS base
+RUN apk add --no-cache openssh-client git openssl
+WORKDIR /usr/src/app
 
-# Set working directory for future use
-WORKDIR /billing-accounts-api-v6
+# ---- Dependencies Stage ----
+FROM base AS deps
+RUN npm install -g pnpm
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-# Install the dependencies from package.json
-RUN npm i -g pnpm
-RUN pnpm install
+# ---- Build Stage ----
+FROM deps AS build
+COPY . .
+# Build the application (runs prisma generate via package script)
 RUN pnpm build
-RUN pnpm prisma:generate
-# Enable Node diagnostic reports and Prisma backtraces for deeper crash insights
-ENV RUST_BACKTRACE=1
-# Optional: raise Prisma log level from the engine; keep it modest by default
-ENV PRISMA_LOG_LEVEL=info
 
-# Copy entrypoint script and make it executable
-COPY entrypoint.sh /entrypoint.sh
+# ---- Production Stage ----
+FROM base AS production
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+
+# Copy built artifacts and runtime deps
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/prisma ./prisma
+COPY --from=build /usr/src/app/entrypoint.sh /entrypoint.sh
+
 RUN chmod +x /entrypoint.sh
 
-# Use entrypoint to run migrations at startup (not build time)
-# Prisma uses PostgreSQL advisory locks to prevent concurrent migrations
 ENTRYPOINT ["/entrypoint.sh"]

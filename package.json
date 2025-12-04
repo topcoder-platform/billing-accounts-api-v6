@@ -35,7 +35,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.7",
     "swagger-ui-express": "^5.0.0",
-    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v3.0.1"
+    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#security"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
