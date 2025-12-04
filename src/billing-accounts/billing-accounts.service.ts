@@ -138,6 +138,7 @@ export class BillingAccountsService {
         endDate: dto.endDate ? new Date(dto.endDate) : null,
         budget: new Prisma.Decimal(dto.budget),
         markup: new Prisma.Decimal(dto.markup),
+        subcontractingEndCustomer: dto.subcontractingEndCustomer,
         clientId: dto.clientId,
         projectId: dto.projectId,
         poNumber: dto.poNumber,
@@ -201,6 +202,9 @@ export class BillingAccountsService {
           : {}),
         ...(dto.markup !== undefined
           ? { markup: new Prisma.Decimal(dto.markup) }
+          : {}),
+        ...(dto.subcontractingEndCustomer !== undefined
+          ? { subcontractingEndCustomer: dto.subcontractingEndCustomer }
           : {}),
         ...(dto.clientId !== undefined ? { clientId: dto.clientId } : {}),
         ...(dto.projectId !== undefined ? { projectId: dto.projectId } : {}),

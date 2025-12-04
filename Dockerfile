@@ -1,36 +1,31 @@
 # ---- Base Stage ----
-FROM node:20-alpine AS base
+FROM node:22.19-alpine AS base
+RUN apk add --no-cache openssh-client git openssl
 WORKDIR /usr/src/app
 
 # ---- Dependencies Stage ----
 FROM base AS deps
-# Install pnpm
 RUN npm install -g pnpm
-# Copy dependency-defining files
 COPY package.json pnpm-lock.yaml ./
-# Install dependencies
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
 # ---- Build Stage ----
-FROM base AS build
-RUN npm install -g pnpm
-COPY --from=deps /usr/src/app/node_modules ./node_modules
+FROM deps AS build
 COPY . .
-# Build the application
+# Build the application (runs prisma generate via package script)
 RUN pnpm build
 
 # ---- Production Stage ----
 FROM base AS production
 ENV NODE_ENV=production
-# Install OpenSSL runtime (provides libssl.so.3 for Prisma musl OpenSSL 3)
-RUN apk add --no-cache openssl
-# Copy built application from the build stage
+WORKDIR /usr/src/app
+
+# Copy built artifacts and runtime deps
 COPY --from=build /usr/src/app/dist ./dist
-# Copy production dependencies (including generated Prisma client) from the build stage
 COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/prisma ./prisma
+COPY --from=build /usr/src/app/entrypoint.sh /entrypoint.sh
 
-# Expose the application port
-EXPOSE 3000
+RUN chmod +x /entrypoint.sh
 
-# The command to run the application
-CMD ["node", "dist/main.js"]
+ENTRYPOINT ["/entrypoint.sh"]

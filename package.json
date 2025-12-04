@@ -13,7 +13,9 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "import:legacy": "ts-node scripts/import-legacy.ts",
-    "import:access": "ts-node scripts/import-ba-access.ts"
+    "import:access": "ts-node scripts/import-ba-access.ts",
+    "import:markup": "ts-node scripts/import-markup.ts",
+    "backfill:clientIds": "ts-node scripts/backfill-client-ids.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
@@ -23,17 +25,17 @@
     "@nestjs/swagger": "^7.4.2",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^10.3.0",
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "^6.18.0",
     "@types/express": "^5.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "dotenv": "^16.4.5",
     "pino": "^9.0.0",
-    "prisma": "^5.18.0",
+    "prisma": "^6.18.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.7",
     "swagger-ui-express": "^5.0.0",
-    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#v3.0.1"
+    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#security"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -50,7 +52,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-        "@prisma/client"
+      "@prisma/client"
     ]
   }
 }
