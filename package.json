@@ -25,13 +25,13 @@
     "@nestjs/swagger": "^7.4.2",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^10.3.0",
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "^6.18.0",
     "@types/express": "^5.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "dotenv": "^16.4.5",
     "pino": "^9.0.0",
-    "prisma": "^5.18.0",
+    "prisma": "^6.18.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.7",
     "swagger-ui-express": "^5.0.0",
@@ -52,7 +52,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-        "@prisma/client"
+      "@prisma/client"
     ]
   }
 }

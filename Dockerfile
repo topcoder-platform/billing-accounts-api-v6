@@ -1,6 +1,7 @@
 # Use the base image with Node.js
 FROM node:22.19-alpine
-RUN apk add --update --no-cache openssh-client git
+# Ensure OpenSSL is present so Prisma can pick correct engine binaries
+RUN apk add --update --no-cache openssh-client git openssl
 # Copy the current directory into the Docker image
 COPY . /billing-accounts-api-v6
 
