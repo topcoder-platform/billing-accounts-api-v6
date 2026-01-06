@@ -15,7 +15,8 @@
     "import:legacy": "ts-node scripts/import-legacy.ts",
     "import:access": "ts-node scripts/import-ba-access.ts",
     "import:markup": "ts-node scripts/import-markup.ts",
-    "backfill:clientIds": "ts-node scripts/backfill-client-ids.ts"
+    "backfill:clientIds": "ts-node scripts/backfill-client-ids.ts",
+    "generate:subcontractor-sql": "ts-node scripts/generate-subcontractor-sql.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
@@ -35,7 +36,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.7",
     "swagger-ui-express": "^5.0.0",
-    "tc-core-library-js": "github:appirio-tech/tc-core-library-js#security"
+    "tc-core-library-js": "github:topcoder-platform/tc-core-library-js#master"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
