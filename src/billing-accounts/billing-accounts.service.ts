@@ -19,7 +19,7 @@ export class BillingAccountsService {
 
   /**
    * List billing accounts one or more user IDs have access to (via Salesforce resource object).
-   * Accepts a single userId (number) or an array of userId strings.
+   * Accepts a single userId (number).
    */
   async listByUserId(userId: number) {
     const { accessToken, instanceUrl } = await this.salesforce.authenticate();
