@@ -19,13 +19,13 @@ export class BillingAccountsService {
 
   /**
    * List billing accounts one or more user IDs have access to (via Salesforce resource object).
-   * Accepts a single userId (string) or an array of userId strings.
+   * Accepts a single userId (number) or an array of userId strings.
    */
   async listByUserId(userId: number) {
     const { accessToken, instanceUrl } = await this.salesforce.authenticate();
 
-    // escape single quotes and build IN clause
-    const escaped = `'${String(userId).replace(/'/g, "\\'")}'`;
+    // escape backslashes and single quotes and build IN clause
+    const escaped = `'${String(userId).replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
     const nameField =
       process.env.SFDC_BILLING_ACCOUNT_NAME_FIELD || "Billing_Account_name__c";
     const sql = `SELECT Topcoder_Billing_Account__r.Id, Topcoder_Billing_Account__r.TopCoder_Billing_Account_Id__c, Topcoder_Billing_Account__r.${nameField}, Topcoder_Billing_Account__r.Start_Date__c, Topcoder_Billing_Account__r.End_Date__c FROM Topcoder_Billing_Account_Resource__c tbar WHERE Topcoder_Billing_Account__r.Active__c=true AND UserID__c = ${escaped}`;

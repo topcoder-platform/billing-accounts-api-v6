@@ -106,7 +106,7 @@ export class BillingAccountsController {
     type: Number,
   })
   async listByUserIds(@Param("userId", ParseIntPipe) userId: number) {
-    return await this.service.listByUserId(userId);
+    return this.service.listByUserId(userId);
   }
 
   @Get(":billingAccountId")
