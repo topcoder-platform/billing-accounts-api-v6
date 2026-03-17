@@ -122,6 +122,29 @@ export class BillingAccountsController {
     return this.service.create(dto);
   }
 
+  @Get("users/:userId")
+  @UseGuards(RolesGuard, ScopesGuard)
+  @Roles(ADMIN_ROLE, COPILOT_ROLE)
+  @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "List billing accounts accessible by user",
+      description:
+        "Retrieve billing accounts that the given user ID has access to (via Salesforce).",
+      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
+    }),
+  )
+  @ApiOkResponse({ description: "List of billing accounts returned" })
+  @ApiParam({
+    name: "userId",
+    description: "User ID (number)",
+    type: Number,
+  })
+  async listByUserIds(@Param("userId", ParseIntPipe) userId: number) {
+    return this.service.listByUserId(userId);
+  }
+
   @Get(":billingAccountId")
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(...BILLING_ACCOUNT_READ_ROLES)

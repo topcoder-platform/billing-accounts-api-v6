@@ -7,13 +7,36 @@ import { UpdateBillingAccountDto } from "./dto/update-billing-account.dto";
 import { LockAmountDto } from "./dto/lock-amount.dto";
 import { ConsumeAmountDto } from "./dto/consume-amount.dto";
 import { MembersLookupService } from "../common/members-lookup.service";
+import SalesforceService from "../common/salesforce.service";
 
 @Injectable()
 export class BillingAccountsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly membersLookup: MembersLookupService,
+    private readonly salesforce: SalesforceService,
   ) {}
+
+  /**
+   * List billing accounts one or more user IDs have access to (via Salesforce resource object).
+   * Accepts a single userId (number).
+   */
+  async listByUserId(userId: number) {
+    const { accessToken, instanceUrl } = await this.salesforce.authenticate();
+
+    // escape backslashes and single quotes and build IN clause
+    const escaped = `'${String(userId).replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+    const nameField =
+      process.env.SFDC_BILLING_ACCOUNT_NAME_FIELD || "Billing_Account_name__c";
+    const sql = `SELECT Topcoder_Billing_Account__r.Id, Topcoder_Billing_Account__r.TopCoder_Billing_Account_Id__c, Topcoder_Billing_Account__r.${nameField}, Topcoder_Billing_Account__r.Start_Date__c, Topcoder_Billing_Account__r.End_Date__c FROM Topcoder_Billing_Account_Resource__c tbar WHERE Topcoder_Billing_Account__r.Active__c=true AND UserID__c = ${escaped}`;
+
+    const res = await this.salesforce.queryUserBillingAccounts(
+      sql,
+      accessToken,
+      instanceUrl,
+    );
+    return res;
+  }
 
   async list(q: QueryBillingAccountsDto) {
     const {

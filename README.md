@@ -8,6 +8,7 @@
   - `GET /billing-accounts` 
   - `POST /billing-accounts` 
   - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals)
+  - `GET /billing-accounts/users/:userId` (list billing accounts accessible by the given Topcoder user ID — resolved via Salesforce resource object)
   - `PATCH /billing-accounts/:billingAccountId`
   - `PATCH /billing-accounts/:billingAccountId/lock-amount` (0 amount = unlock)
   - `PATCH /billing-accounts/:billingAccountId/consume-amount` (deletes locks for challenge, then upserts consumed)
@@ -43,6 +44,18 @@ pnpm run dev
 # or
 pnpm run build && pnpm start
 ```
+
+## Salesforce integration
+
+- This service can resolve billing accounts a user has access to via Salesforce. To enable Salesforce calls, configure the following environment variables in `.env` (see `.env.example`):
+  - `SALESFORCE_CLIENT_ID` — Connected App client ID
+  - `SALESFORCE_SUBJECT` — integration user username (subject for JWT)
+  - `SALESFORCE_CLIENT_KEY` — PEM private key for the connected app (escape newlines as `\\n` in single-line `.env` files)
+  - `SALESFORCE_AUDIENCE` — login URL (default `https://login.salesforce.com`, use `https://test.salesforce.com` for sandbox)
+
+- Optional overrides for field names returned by your Salesforce org are available via `SFDC_BILLING_ACCOUNT_NAME_FIELD`, `SFDC_BILLING_ACCOUNT_MARKUP_FIELD`, and `SFDC_BILLING_ACCOUNT_ACTIVE_FIELD`.
+
+- Once configured, you can call `GET /v6/billing-accounts/users/:userId` to obtain billing accounts the specified user has access to (the service authenticates to Salesforce using JWT Bearer flow and queries resource objects).
 
 ## Import scripts
 
