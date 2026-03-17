@@ -13,3 +13,5 @@ export const SCOPES = {
 
 export const ADMIN_ROLE = "administrator";
 export const COPILOT_ROLE = "copilot";
+export const TALENT_MANAGER_ROLE = "Talent Manager";
+export const TOPCODER_TALENT_MANAGER_ROLE = "Topcoder Talent Manager";

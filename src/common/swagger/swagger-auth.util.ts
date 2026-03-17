@@ -1,7 +1,9 @@
 import { ApiOperationOptions } from "@nestjs/swagger";
 
-interface OperationDocOptions
-  extends Omit<ApiOperationOptions, "summary" | "description"> {
+interface OperationDocOptions extends Omit<
+  ApiOperationOptions,
+  "summary" | "description"
+> {
   summary: string;
   description?: string;
   jwtRoles?: string[];

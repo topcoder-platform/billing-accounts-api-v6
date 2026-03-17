@@ -15,7 +15,9 @@ export class MembersLookupService {
     if (this.initialized) return;
     const url = process.env.MEMBER_DB_URL;
     if (!url) {
-      this.logger.warn("MEMBER_DB_URL not set; member handle lookups will be skipped.");
+      this.logger.warn(
+        "MEMBER_DB_URL not set; member handle lookups will be skipped.",
+      );
       this.initialized = true;
       return;
     }
@@ -26,7 +28,7 @@ export class MembersLookupService {
           ? parseInt(process.env.BA_SERVICE_PRISMA_TIMEOUT, 10)
           : 10000,
       },
-      datasources: { db: { url } }
+      datasources: { db: { url } },
     });
     this.initialized = true;
   }
@@ -43,14 +45,20 @@ export class MembersLookupService {
     // Convert to numeric values where possible (members.userId is BigInt)
     const numericIds = userIds
       .map((id) => {
-        try { return BigInt(id); } catch { return undefined; }
+        try {
+          return BigInt(id);
+        } catch {
+          return undefined;
+        }
       })
       .filter((v): v is bigint => typeof v === "bigint");
     if (!numericIds.length) return result;
 
     // Build an IN (...) clause safely using Prisma.sql and Prisma.join
-    const rows: Array<{ userId: bigint; handle: string }> = await (this.client as any).$queryRaw(
-      Prisma.sql`SELECT "userId", "handle" FROM "member" WHERE "userId" IN (${Prisma.join(numericIds)})`
+    const rows: Array<{ userId: bigint; handle: string }> = await (
+      this.client as any
+    ).$queryRaw(
+      Prisma.sql`SELECT "userId", "handle" FROM "member" WHERE "userId" IN (${Prisma.join(numericIds)})`,
     );
 
     for (const r of rows) {

@@ -1,4 +1,11 @@
-import { IsDateString, IsIn, IsInt, IsOptional, IsString, Min } from "class-validator";
+import {
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
 import { Transform } from "class-transformer";
 
 export class QueryBillingAccountsDto {

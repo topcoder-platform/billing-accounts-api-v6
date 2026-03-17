@@ -1,9 +1,6 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
-
-// tc-core-library-js is CommonJS only, import via require
-
-const tcCore = require("tc-core-library-js");
+import * as tcCore from "tc-core-library-js";
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {

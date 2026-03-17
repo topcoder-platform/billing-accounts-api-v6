@@ -19,6 +19,9 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     if (!required || required.length === 0) return true;
+    const normalizedRequiredRoles = required.map((role) =>
+      role.trim().toLowerCase(),
+    );
 
     const req = context.switchToHttp().getRequest();
     const user = req.authUser;
@@ -31,24 +34,33 @@ export class RolesGuard implements CanActivate {
           .split(",")
           .map((r: string) => r.trim())
           .filter(Boolean);
+    const normalizedRoles = roles.map((role) => role.toLowerCase());
 
-    const ok = roles.some((r: string) => required.includes(r));
+    const ok = normalizedRoles.some((role: string) =>
+      normalizedRequiredRoles.includes(role),
+    );
     if (ok) return true;
 
     const fallbackScopes = this.reflector.getAllAndOverride<string[]>(
       SCOPES_KEY,
-      [context.getHandler(), context.getClass()]
+      [context.getHandler(), context.getClass()],
     );
 
     if (fallbackScopes && fallbackScopes.length > 0) {
+      const normalizedFallbackScopes = fallbackScopes.map((scope) =>
+        scope.trim().toLowerCase(),
+      );
       const scopes: string[] = Array.isArray(user.scopes)
         ? user.scopes
         : (user.scope || "")
             .split(" ")
             .map((s: string) => s.trim())
             .filter(Boolean);
+      const normalizedScopes = scopes.map((scope) => scope.toLowerCase());
 
-      const scopeOk = fallbackScopes.some((s) => scopes.includes(s));
+      const scopeOk = normalizedScopes.some((scope) =>
+        normalizedFallbackScopes.includes(scope),
+      );
       if (scopeOk) return true;
     }
 

@@ -81,23 +81,22 @@ export class BillingAccountsService {
         by: ["billingAccountId"],
         where: { billingAccountId: { in: ids } },
         _sum: { amount: true },
-        orderBy: [],   
+        orderBy: [],
       }),
       this.prisma.consumedAmount.groupBy({
         by: ["billingAccountId"],
         where: { billingAccountId: { in: ids } },
         _sum: { amount: true },
-        orderBy: [],   
+        orderBy: [],
       }),
     ]);
 
     const lockedMap = new Map(
-      lockedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0])
+      lockedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0]),
     );
     const consumedMap = new Map(
-      consumedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0])
+      consumedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0]),
     );
-
 
     const data = items.map((i) => {
       const locked = Number(lockedMap.get(i.id) || 0);
@@ -162,7 +161,10 @@ export class BillingAccountsService {
         consumedAmounts: true,
       },
     });
-    if (!ba) throw new NotFoundException(`Billing account with ID ${billingAccountId} not found`);
+    if (!ba)
+      throw new NotFoundException(
+        `Billing account with ID ${billingAccountId} not found`,
+      );
 
     const locked = ba.lockedAmounts.reduce(
       (sum, r) => sum + Number(r.amount),
