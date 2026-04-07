@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Req,
   Get,
   Param,
   Patch,
@@ -11,6 +12,7 @@ import {
   Delete,
 } from "@nestjs/common";
 import { BillingAccountsService } from "./billing-accounts.service";
+import type { BillingAccountsAuthUser } from "./billing-accounts.service";
 import { QueryBillingAccountsDto } from "./dto/query-billing-accounts.dto";
 import { CreateBillingAccountDto } from "./dto/create-billing-account.dto";
 import { UpdateBillingAccountDto } from "./dto/update-billing-account.dto";
@@ -24,9 +26,12 @@ import {
   SCOPES,
   ADMIN_ROLE,
   COPILOT_ROLE,
+  PROJECT_MANAGER_ROLE,
   TALENT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
   TOPCODER_TALENT_MANAGER_ROLE,
 } from "../auth/constants";
+import type { Request } from "express";
 import { buildOperationDoc } from "../common/swagger/swagger-auth.util";
 import {
   ApiBearerAuth,
@@ -45,11 +50,21 @@ const BILLING_ACCOUNT_READ_ROLES = [
   TOPCODER_TALENT_MANAGER_ROLE,
 ];
 
+const BILLING_ACCOUNT_PROJECT_READ_ROLES = [
+  ...BILLING_ACCOUNT_READ_ROLES,
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+];
+
 const BILLING_ACCOUNT_MANAGE_ROLES = [
   ADMIN_ROLE,
   TALENT_MANAGER_ROLE,
   TOPCODER_TALENT_MANAGER_ROLE,
 ];
+
+interface BillingAccountsRequest extends Request {
+  authUser?: BillingAccountsAuthUser;
+}
 
 @ApiTags("Billing Accounts")
 @ApiBearerAuth("JWT")
@@ -60,14 +75,14 @@ export class BillingAccountsController {
 
   @Get()
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(...BILLING_ACCOUNT_READ_ROLES)
+  @Roles(...BILLING_ACCOUNT_PROJECT_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "List billing accounts",
       description:
-        "Retrieve billing accounts with optional filters, sorting, and pagination.",
-      jwtRoles: BILLING_ACCOUNT_READ_ROLES,
+        "Retrieve billing accounts with optional filters, sorting, and pagination. Project Managers are limited to billing accounts granted to their own user id.",
+      jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
@@ -99,8 +114,11 @@ export class BillingAccountsController {
   @ApiQuery({ name: "sortOrder", required: false, enum: ["asc", "desc"] })
   @ApiQuery({ name: "page", required: false, type: Number })
   @ApiQuery({ name: "perPage", required: false, type: Number })
-  async list(@Query() q: QueryBillingAccountsDto) {
-    return this.service.list(q);
+  async list(
+    @Query() q: QueryBillingAccountsDto,
+    @Req() req: BillingAccountsRequest,
+  ) {
+    return this.service.list(q, req.authUser);
   }
 
   @Post()
@@ -147,14 +165,14 @@ export class BillingAccountsController {
 
   @Get(":billingAccountId")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(...BILLING_ACCOUNT_READ_ROLES)
+  @Roles(...BILLING_ACCOUNT_PROJECT_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Get a billing account",
       description:
-        "Fetch a billing account by its identifier, including budget and client data.",
-      jwtRoles: BILLING_ACCOUNT_READ_ROLES,
+        "Fetch a billing account by its identifier, including budget and client data. Project Managers can read only billing accounts granted to them.",
+      jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
@@ -164,8 +182,11 @@ export class BillingAccountsController {
     description: "Billing Account ID",
     type: Number,
   })
-  async get(@Param("billingAccountId", ParseIntPipe) id: number) {
-    return this.service.get(id);
+  async get(
+    @Param("billingAccountId", ParseIntPipe) id: number,
+    @Req() req: BillingAccountsRequest,
+  ) {
+    return this.service.get(id, req.authUser);
   }
 
   @Patch(":billingAccountId")
