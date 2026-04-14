@@ -11,7 +11,10 @@ import {
 import { ClientsService } from "./clients.service";
 import { QueryClientsDto } from "./dto/query-clients.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
-import { CreateClientDto, CreateClientRequestDto } from "./dto/create-client.dto";
+import {
+  CreateClientDto,
+  CreateClientRequestDto,
+} from "./dto/create-client.dto";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -42,7 +45,8 @@ export class ClientsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "List clients",
-      description: "Retrieve clients with optional filters, sorting, and pagination.",
+      description:
+        "Retrieve clients with optional filters, sorting, and pagination.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT],
     }),
@@ -55,7 +59,11 @@ export class ClientsController {
   @ApiQuery({ name: "startDateTo", required: false, type: String })
   @ApiQuery({ name: "endDateFrom", required: false, type: String })
   @ApiQuery({ name: "endDateTo", required: false, type: String })
-  @ApiQuery({ name: "sortBy", required: false, enum: ["name", "startDate", "endDate", "status", "createdAt"] })
+  @ApiQuery({
+    name: "sortBy",
+    required: false,
+    enum: ["name", "startDate", "endDate", "status", "createdAt"],
+  })
   @ApiQuery({ name: "sortOrder", required: false, enum: ["asc", "desc"] })
   @ApiQuery({ name: "page", required: false, type: Number })
   @ApiQuery({ name: "perPage", required: false, type: Number })
@@ -70,7 +78,8 @@ export class ClientsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "Get a client",
-      description: "Fetch a client by its identifier, including billing accounts and metadata.",
+      description:
+        "Fetch a client by its identifier, including billing accounts and metadata.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT],
     }),
@@ -88,7 +97,8 @@ export class ClientsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "Create a client",
-      description: "Create a new client with optional code name, dates, and status.",
+      description:
+        "Create a new client with optional code name, dates, and status.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.CREATE_CLIENT, SCOPES.ALL_CLIENT],
     }),
@@ -123,7 +133,8 @@ export class ClientsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "Update a client",
-      description: "Update client metadata, billing account associations, or status.",
+      description:
+        "Update client metadata, billing account associations, or status.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.UPDATE_CLIENT, SCOPES.ALL_CLIENT],
     }),

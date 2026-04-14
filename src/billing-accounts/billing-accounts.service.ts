@@ -8,6 +8,114 @@ import { LockAmountDto } from "./dto/lock-amount.dto";
 import { ConsumeAmountDto } from "./dto/consume-amount.dto";
 import { MembersLookupService } from "../common/members-lookup.service";
 import SalesforceService from "../common/salesforce.service";
+import {
+  ADMIN_ROLE,
+  COPILOT_ROLE,
+  PROJECT_MANAGER_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+} from "../auth/constants";
+
+export interface BillingAccountsAuthUser {
+  role?: string;
+  roles?: string[] | string;
+  userId?: number | string;
+}
+
+const UNRESTRICTED_BILLING_ACCOUNT_READ_ROLES = [
+  ADMIN_ROLE,
+  COPILOT_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+];
+
+const RESTRICTED_PROJECT_MANAGER_READ_ROLES = [
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+];
+
+/**
+ * Normalizes authenticated caller roles for case-insensitive comparisons.
+ *
+ * Accepts either array-backed `roles` or the legacy comma-delimited `role`
+ * payload shapes emitted by different token issuers.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns Lower-cased role names.
+ */
+function getNormalizedAuthUserRoles(
+  authUser?: BillingAccountsAuthUser,
+): string[] {
+  const roles = Array.isArray(authUser?.roles)
+    ? authUser.roles
+    : String(authUser?.roles || authUser?.role || "")
+        .split(",")
+        .map((role) => role.trim())
+        .filter(Boolean);
+
+  return roles.map((role) => role.toLowerCase());
+}
+
+/**
+ * Resolves the caller user id as a trimmed string when present.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns Normalized user id or `undefined` when missing.
+ */
+function getNormalizedAuthUserId(
+  authUser?: BillingAccountsAuthUser,
+): string | undefined {
+  if (
+    typeof authUser?.userId === "number" &&
+    Number.isFinite(authUser.userId)
+  ) {
+    return String(authUser.userId);
+  }
+
+  if (typeof authUser?.userId !== "string") {
+    return undefined;
+  }
+
+  const normalizedUserId = authUser.userId.trim();
+
+  return normalizedUserId || undefined;
+}
+
+/**
+ * Returns the enforced access-grant user id for restricted Project Manager
+ * billing-account reads.
+ *
+ * `undefined` means the caller keeps unrestricted read behavior. `null`
+ * indicates a restricted Project Manager caller without a usable `userId`,
+ * which should be treated as no accessible accounts.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns Enforced user id, `null`, or `undefined`.
+ */
+function resolveRestrictedProjectManagerUserId(
+  authUser?: BillingAccountsAuthUser,
+): string | null | undefined {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+  const hasRestrictedProjectManagerRole =
+    RESTRICTED_PROJECT_MANAGER_READ_ROLES.some((role) =>
+      normalizedRoles.includes(role.toLowerCase()),
+    );
+
+  if (!hasRestrictedProjectManagerRole) {
+    return undefined;
+  }
+
+  const hasUnrestrictedReadRole = UNRESTRICTED_BILLING_ACCOUNT_READ_ROLES.some(
+    (role) => normalizedRoles.includes(role.toLowerCase()),
+  );
+
+  if (hasUnrestrictedReadRole) {
+    return undefined;
+  }
+
+  return getNormalizedAuthUserId(authUser) ?? null;
+}
 
 @Injectable()
 export class BillingAccountsService {
@@ -38,7 +146,17 @@ export class BillingAccountsService {
     return res;
   }
 
-  async list(q: QueryBillingAccountsDto) {
+  /**
+   * Lists billing accounts with optional filtering, sorting, and pagination.
+   *
+   * Project Manager callers are constrained to billing accounts granted to
+   * their own `userId`, regardless of an explicit `userId` query override.
+   *
+   * @param q Query filters and pagination controls.
+   * @param authUser Authenticated caller context from `req.authUser`.
+   * @returns Paginated billing-account result set.
+   */
+  async list(q: QueryBillingAccountsDto, authUser?: BillingAccountsAuthUser) {
     const {
       clientId,
       userId,
@@ -53,13 +171,27 @@ export class BillingAccountsService {
       sortBy,
       sortOrder = "asc",
     } = q;
+    const restrictedProjectManagerUserId =
+      resolveRestrictedProjectManagerUserId(authUser);
+
+    if (restrictedProjectManagerUserId === null) {
+      return {
+        page,
+        perPage,
+        total: 0,
+        totalPages: 0,
+        data: [],
+      };
+    }
 
     const where: Prisma.BillingAccountWhereInput = {
       ...(clientId ? { clientId } : {}),
       ...(status ? { status } : {}),
     };
 
-    if (userId) {
+    if (restrictedProjectManagerUserId) {
+      where.accessGrants = { some: { userId: restrictedProjectManagerUserId } };
+    } else if (userId) {
       where.accessGrants = { some: { userId } };
     }
 
@@ -104,23 +236,22 @@ export class BillingAccountsService {
         by: ["billingAccountId"],
         where: { billingAccountId: { in: ids } },
         _sum: { amount: true },
-        orderBy: [],   
+        orderBy: [],
       }),
       this.prisma.consumedAmount.groupBy({
         by: ["billingAccountId"],
         where: { billingAccountId: { in: ids } },
         _sum: { amount: true },
-        orderBy: [],   
+        orderBy: [],
       }),
     ]);
 
     const lockedMap = new Map(
-      lockedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0])
+      lockedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0]),
     );
     const consumedMap = new Map(
-      consumedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0])
+      consumedAgg.map((r) => [r.billingAccountId, r._sum?.amount || 0]),
     );
-
 
     const data = items.map((i) => {
       const locked = Number(lockedMap.get(i.id) || 0);
@@ -176,16 +307,50 @@ export class BillingAccountsService {
     });
   }
 
-  async get(billingAccountId: number) {
-    const ba = await this.prisma.billingAccount.findUnique({
-      where: { id: billingAccountId },
-      include: {
-        client: true,
-        lockedAmounts: true,
-        consumedAmounts: true,
-      },
-    });
-    if (!ba) throw new NotFoundException(`Billing account with ID ${billingAccountId} not found`);
+  /**
+   * Fetches a single billing account and its budget aggregates.
+   *
+   * Project Manager callers can read only billing accounts granted to their own
+   * `userId`. Missing access is surfaced as not found to avoid leaking account
+   * existence.
+   *
+   * @param billingAccountId Billing-account identifier.
+   * @param authUser Authenticated caller context from `req.authUser`.
+   * @returns Billing-account details with locked, consumed, and remaining
+   * budget totals.
+   * @throws NotFoundException When the billing account does not exist or the
+   * caller does not have access to it.
+   */
+  async get(billingAccountId: number, authUser?: BillingAccountsAuthUser) {
+    const restrictedProjectManagerUserId =
+      resolveRestrictedProjectManagerUserId(authUser);
+    const include = {
+      client: true,
+      lockedAmounts: true,
+      consumedAmounts: true,
+    };
+    const ba =
+      restrictedProjectManagerUserId === undefined
+        ? await this.prisma.billingAccount.findUnique({
+            where: { id: billingAccountId },
+            include,
+          })
+        : restrictedProjectManagerUserId === null
+          ? null
+          : await this.prisma.billingAccount.findFirst({
+              where: {
+                id: billingAccountId,
+                accessGrants: {
+                  some: { userId: restrictedProjectManagerUserId },
+                },
+              },
+              include,
+            });
+
+    if (!ba)
+      throw new NotFoundException(
+        `Billing account with ID ${billingAccountId} not found`,
+      );
 
     const locked = ba.lockedAmounts.reduce(
       (sum, r) => sum + Number(r.amount),

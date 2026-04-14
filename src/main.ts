@@ -63,7 +63,8 @@ async function bootstrap() {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
-        description: "User JWT token with role claims (e.g. administrator, copilot).",
+        description:
+          "User JWT token with role claims (e.g. administrator, Talent Manager, Topcoder Talent Manager, copilot).",
       },
       "JWT",
     )
@@ -72,7 +73,8 @@ async function bootstrap() {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
-        description: "Machine-to-machine token that carries the required scopes in `scope`.",
+        description:
+          "Machine-to-machine token that carries the required scopes in `scope`.",
       },
       "M2M",
     )
@@ -85,4 +87,7 @@ async function bootstrap() {
 
   console.log(`TC Billing Account Service listening on :${port}`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error("Failed to start Billing Accounts API", error);
+  process.exit(1);
+});

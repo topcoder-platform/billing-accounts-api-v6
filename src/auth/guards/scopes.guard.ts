@@ -35,10 +35,10 @@ export class ScopesGuard implements CanActivate {
     const ok = required.some((s) => scopes.includes(s));
     if (ok) return true;
 
-    const fallbackRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const fallbackRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
     if (fallbackRoles && fallbackRoles.length > 0) {
       const roles: string[] = Array.isArray(user.roles)

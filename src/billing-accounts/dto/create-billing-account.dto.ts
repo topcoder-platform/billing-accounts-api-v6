@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsBoolean,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 
 export class CreateBillingAccountDto {
   @ApiProperty({ example: "Acme Innovation Billing Account" })
@@ -11,7 +17,9 @@ export class CreateBillingAccountDto {
   @IsString()
   projectId?: string;
 
-  @ApiPropertyOptional({ example: "Primary billing account for Acme Innovation initiatives." })
+  @ApiPropertyOptional({
+    example: "Primary billing account for Acme Innovation initiatives.",
+  })
   @IsOptional()
   @IsString()
   description?: string;

@@ -14,12 +14,8 @@ export class HealthService {
     // and it just searches a single challenge type, it should be quick operation
     checksRun += 1;
     const timestampMS = new Date().getTime();
-    try {
-      await this.service.get('1');
-    } catch (e) {
-      throw e;
-    }
+    await this.service.get("1");
     // there is no error, and it is quick, then return checks run count
-    return ({checksRun, timestamp: timestampMS})
+    return { checksRun, timestamp: timestampMS };
   }
 }

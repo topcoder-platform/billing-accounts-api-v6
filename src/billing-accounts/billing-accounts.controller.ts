@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Req,
   Get,
   Param,
   Patch,
@@ -11,6 +12,7 @@ import {
   Delete,
 } from "@nestjs/common";
 import { BillingAccountsService } from "./billing-accounts.service";
+import type { BillingAccountsAuthUser } from "./billing-accounts.service";
 import { QueryBillingAccountsDto } from "./dto/query-billing-accounts.dto";
 import { CreateBillingAccountDto } from "./dto/create-billing-account.dto";
 import { UpdateBillingAccountDto } from "./dto/update-billing-account.dto";
@@ -20,7 +22,16 @@ import { Roles } from "../auth/decorators/roles.decorator";
 import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { ScopesGuard } from "../auth/guards/scopes.guard";
-import { SCOPES, ADMIN_ROLE, COPILOT_ROLE } from "../auth/constants";
+import {
+  SCOPES,
+  ADMIN_ROLE,
+  COPILOT_ROLE,
+  PROJECT_MANAGER_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+} from "../auth/constants";
+import type { Request } from "express";
 import { buildOperationDoc } from "../common/swagger/swagger-auth.util";
 import {
   ApiBearerAuth,
@@ -32,6 +43,29 @@ import {
   ApiBody,
 } from "@nestjs/swagger";
 
+const BILLING_ACCOUNT_READ_ROLES = [
+  ADMIN_ROLE,
+  COPILOT_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+];
+
+const BILLING_ACCOUNT_PROJECT_READ_ROLES = [
+  ...BILLING_ACCOUNT_READ_ROLES,
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+];
+
+const BILLING_ACCOUNT_MANAGE_ROLES = [
+  ADMIN_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+];
+
+interface BillingAccountsRequest extends Request {
+  authUser?: BillingAccountsAuthUser;
+}
+
 @ApiTags("Billing Accounts")
 @ApiBearerAuth("JWT")
 @ApiBearerAuth("M2M")
@@ -41,18 +75,23 @@ export class BillingAccountsController {
 
   @Get()
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE, COPILOT_ROLE)
+  @Roles(...BILLING_ACCOUNT_PROJECT_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "List billing accounts",
-      description: "Retrieve billing accounts with optional filters, sorting, and pagination.",
-      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      description:
+        "Retrieve billing accounts with optional filters, sorting, and pagination. Project Managers are limited to billing accounts granted to their own user id.",
+      jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Paginated list of billing accounts returned" })
-  @ApiQuery({ name: "name", required: false, description: "Filter by name (contains, case-insensitive)" })
+  @ApiQuery({
+    name: "name",
+    required: false,
+    description: "Filter by name (contains, case-insensitive)",
+  })
   @ApiQuery({ name: "clientId", required: false })
   @ApiQuery({ name: "userId", required: false })
   @ApiQuery({ name: "status", required: false, enum: ["ACTIVE", "INACTIVE"] })
@@ -60,23 +99,38 @@ export class BillingAccountsController {
   @ApiQuery({ name: "startDateTo", required: false, type: String })
   @ApiQuery({ name: "endDateFrom", required: false, type: String })
   @ApiQuery({ name: "endDateTo", required: false, type: String })
-  @ApiQuery({ name: "sortBy", required: false, enum: ["endDate", "startDate", "id", "createdAt", "createdBy", "remainingBudget"] })
+  @ApiQuery({
+    name: "sortBy",
+    required: false,
+    enum: [
+      "endDate",
+      "startDate",
+      "id",
+      "createdAt",
+      "createdBy",
+      "remainingBudget",
+    ],
+  })
   @ApiQuery({ name: "sortOrder", required: false, enum: ["asc", "desc"] })
   @ApiQuery({ name: "page", required: false, type: Number })
   @ApiQuery({ name: "perPage", required: false, type: Number })
-  async list(@Query() q: QueryBillingAccountsDto) {
-    return this.service.list(q);
+  async list(
+    @Query() q: QueryBillingAccountsDto,
+    @Req() req: BillingAccountsRequest,
+  ) {
+    return this.service.list(q, req.authUser);
   }
 
   @Post()
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE)
+  @Roles(...BILLING_ACCOUNT_MANAGE_ROLES)
   @Scopes(SCOPES.CREATE_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Create a billing account",
-      description: "Create a new billing account with the provided project and budget details.",
-      jwtRoles: [ADMIN_ROLE],
+      description:
+        "Create a new billing account with the provided project and budget details.",
+      jwtRoles: BILLING_ACCOUNT_MANAGE_ROLES,
       m2mScopes: [SCOPES.CREATE_BA, SCOPES.ALL_BA],
     }),
   )
@@ -111,36 +165,48 @@ export class BillingAccountsController {
 
   @Get(":billingAccountId")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE, COPILOT_ROLE)
+  @Roles(...BILLING_ACCOUNT_PROJECT_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Get a billing account",
-      description: "Fetch a billing account by its identifier, including budget and client data.",
-      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      description:
+        "Fetch a billing account by its identifier, including budget and client data. Project Managers can read only billing accounts granted to them.",
+      jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Billing account returned" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
-  async get(@Param("billingAccountId", ParseIntPipe) id: number) {
-    return this.service.get(id);
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
+  async get(
+    @Param("billingAccountId", ParseIntPipe) id: number,
+    @Req() req: BillingAccountsRequest,
+  ) {
+    return this.service.get(id, req.authUser);
   }
 
   @Patch(":billingAccountId")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE)
+  @Roles(...BILLING_ACCOUNT_MANAGE_ROLES)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Update a billing account",
       description: "Update billing account metadata or budget details.",
-      jwtRoles: [ADMIN_ROLE],
+      jwtRoles: BILLING_ACCOUNT_MANAGE_ROLES,
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Billing account updated" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   @ApiBody({ type: UpdateBillingAccountDto })
   async update(
     @Param("billingAccountId", ParseIntPipe) id: number,
@@ -156,13 +222,18 @@ export class BillingAccountsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "Lock funds for a challenge",
-      description: "Reserve an amount on a billing account for a specific challenge.",
+      description:
+        "Reserve an amount on a billing account for a specific challenge.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Lock created/updated or unlocked" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   @ApiBody({ type: LockAmountDto })
   async lock(
     @Param("billingAccountId", ParseIntPipe) id: number,
@@ -178,13 +249,18 @@ export class BillingAccountsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "Consume reserved funds",
-      description: "Consume a previously locked amount for a challenge and record the transaction.",
+      description:
+        "Consume a previously locked amount for a challenge and record the transaction.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Consumed amount recorded" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   @ApiBody({ type: ConsumeAmountDto })
   async consume(
     @Param("billingAccountId", ParseIntPipe) id: number,
@@ -197,48 +273,57 @@ export class BillingAccountsController {
 
   @Get(":billingAccountId/users")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE, COPILOT_ROLE)
+  @Roles(...BILLING_ACCOUNT_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "List billing account resources",
-      description: "List users assigned to a billing account (includes member handle).",
-      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      description:
+        "List users assigned to a billing account (includes member handle).",
+      jwtRoles: BILLING_ACCOUNT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "List of resources returned" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   async listUsers(@Param("billingAccountId", ParseIntPipe) id: number) {
     return this.service.listUsers(id);
   }
 
   @Post(":billingAccountId/users")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE)
+  @Roles(...BILLING_ACCOUNT_MANAGE_ROLES)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Add a user to billing account",
       description: "Grant resource access to a user on the billing account.",
-      jwtRoles: [ADMIN_ROLE],
+      jwtRoles: BILLING_ACCOUNT_MANAGE_ROLES,
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "User added" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   @ApiBody({
     schema: {
-      type: 'object',
+      type: "object",
       properties: {
         param: {
-          type: 'object',
-          properties: { userId: { type: 'string' } },
-          required: ['userId'],
+          type: "object",
+          properties: { userId: { type: "string" } },
+          required: ["userId"],
         },
-        userId: { type: 'string' },
+        userId: { type: "string" },
       },
-      required: ['param'],
+      required: ["param"],
       example: {
         param: {
           userId: "12345678",
@@ -257,18 +342,22 @@ export class BillingAccountsController {
 
   @Delete(":billingAccountId/users/:userId")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE)
+  @Roles(...BILLING_ACCOUNT_MANAGE_ROLES)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Remove a user from billing account",
       description: "Revoke resource access for a user on this billing account.",
-      jwtRoles: [ADMIN_ROLE],
+      jwtRoles: BILLING_ACCOUNT_MANAGE_ROLES,
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "User removed" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   @ApiParam({ name: "userId", description: "User ID (string)" })
   async removeUser(
     @Param("billingAccountId", ParseIntPipe) id: number,
@@ -279,18 +368,23 @@ export class BillingAccountsController {
 
   @Get(":billingAccountId/users/:userId/access")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(ADMIN_ROLE, COPILOT_ROLE)
+  @Roles(...BILLING_ACCOUNT_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Check user access",
-      description: "Return whether a given user has access to the billing account.",
-      jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
+      description:
+        "Return whether a given user has access to the billing account.",
+      jwtRoles: BILLING_ACCOUNT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Boolean access returned" })
-  @ApiParam({ name: "billingAccountId", description: "Billing Account ID", type: Number })
+  @ApiParam({
+    name: "billingAccountId",
+    description: "Billing Account ID",
+    type: Number,
+  })
   @ApiParam({ name: "userId", description: "User ID (string)" })
   async hasAccess(
     @Param("billingAccountId", ParseIntPipe) id: number,

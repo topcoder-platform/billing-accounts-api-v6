@@ -24,6 +24,12 @@
 **Authorization**
 - JWT middleware via `tc-core-library-js` attaches `req.authUser`
 - Guards for Roles (e.g., `Administrator`) and M2M Scopes are provided.
+- Billing-account management endpoints accept `administrator`, `Talent Manager`,
+  and `Topcoder Talent Manager` JWT roles; read-only billing-account lookups
+  also continue to allow `copilot`, `Project Manager`, and `Topcoder Project Manager`.
+  Project Managers are restricted to billing accounts granted to their own
+  user id on `GET /billing-accounts` and `GET /billing-accounts/:billingAccountId`.
+  Role checks are case-insensitive so mixed token casing does not block access.
 - Configure env: `AUTH_SECRET` or `AUTH0_URL/AUDIENCE/ISSUER` as needed.
 
 ## Quickstart
