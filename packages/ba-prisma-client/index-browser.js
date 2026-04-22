@@ -158,7 +158,8 @@ exports.Prisma.BillingAccountScalarFieldEnum = {
 exports.Prisma.LockedAmountScalarFieldEnum = {
   id: 'id',
   billingAccountId: 'billingAccountId',
-  challengeId: 'challengeId',
+  externalId: 'externalId',
+  externalType: 'externalType',
   amount: 'amount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -167,7 +168,8 @@ exports.Prisma.LockedAmountScalarFieldEnum = {
 exports.Prisma.ConsumedAmountScalarFieldEnum = {
   id: 'id',
   billingAccountId: 'billingAccountId',
-  challengeId: 'challengeId',
+  externalId: 'externalId',
+  externalType: 'externalType',
   amount: 'amount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -202,6 +204,11 @@ exports.ClientStatus = exports.$Enums.ClientStatus = {
 exports.BAStatus = exports.$Enums.BAStatus = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'
+};
+
+exports.BudgetEntryExternalType = exports.$Enums.BudgetEntryExternalType = {
+  CHALLENGE: 'CHALLENGE',
+  ENGAGEMENT: 'ENGAGEMENT'
 };
 
 exports.Prisma.ModelName = {

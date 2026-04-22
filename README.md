@@ -7,11 +7,11 @@
 - Endpoints:
   - `GET /billing-accounts` 
   - `POST /billing-accounts` 
-  - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals)
+  - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals; line items expose `amount`, `date`, `externalId`, `externalType`, `externalName`, and `challengeId` only for challenge compatibility)
   - `GET /billing-accounts/users/:userId` (list billing accounts accessible by the given Topcoder user ID — resolved via Salesforce resource object)
   - `PATCH /billing-accounts/:billingAccountId`
-  - `PATCH /billing-accounts/:billingAccountId/lock-amount` (0 amount = unlock)
-  - `PATCH /billing-accounts/:billingAccountId/consume-amount` (deletes locks for challenge, then upserts consumed)
+  - `PATCH /billing-accounts/:billingAccountId/lock-amount` (challenge-only typed reference; non-negative amount; 0 amount = unlock; rejects insufficient remaining funds)
+  - `PATCH /billing-accounts/:billingAccountId/consume-amount` (positive amount; challenge typed references delete the matching lock and overwrite consumed; engagement typed references append a consumed row; rejects insufficient remaining funds)
   - `GET /billing-accounts/:billingAccountId/users` (list users with access)
   - `POST /billing-accounts/:billingAccountId/users` (grant access; accepts `{ param: { userId } }` or `{ userId }`)
   - `DELETE /billing-accounts/:billingAccountId/users/:userId` (revoke access)
