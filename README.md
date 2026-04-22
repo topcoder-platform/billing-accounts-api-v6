@@ -74,6 +74,38 @@ pnpm run build && pnpm start
     - Lookup the matching `user_account` by `user_account_id`, then query the Members DB by `user_name` (handle)
     - Upsert `BillingAccountAccess` for the resolved `userId`
 
+- Engagement payment consumed backfill:
+  - Required env:
+    - `DATABASE_URL` for billing-accounts-api-v6.
+    - `FINANCE_DB_URL` for tc-finance-api (`winnings` and `payment`).
+    - `ENGAGEMENTS_DB_URL` for engagements-api-v6 (`EngagementAssignment` and `Engagement`).
+    - `PROJECTS_DB_URL` for projects-api-v6 (`projects.billingAccountId`, matching the trusted project lookup used by engagements-api-v6).
+    - Optional `TGBillingAccounts` for finance-compatible TopGear exemptions. If unset, the script uses finance's default exempt accounts `80000062,80002800`.
+  - Dry run:
+    - `pnpm run backfill:engagementPayments -- --dry-run`
+    - Dry run is the default. It reads finance engagement payments, resolves assignment/project/billing account context, plans inserts/updates, and writes a JSON audit report under `scripts/output/`.
+  - Apply:
+    - `pnpm run backfill:engagementPayments -- --apply`
+    - Optional filters: `--assignmentId=<id>[,<id>]`, `--winningId=<id>[,<id>]`, `--since=<iso-date>`, `--until=<iso-date>`, `--limit=<n>`, `--report=<path>`.
+  - Behavior:
+    - Uses `payment.challenge_markup` first as a markup rate and computes `total_amount + (total_amount * challenge_markup)`.
+    - If `payment.challenge_markup` is absent and `payment.challenge_fee` is present, treats `challenge_fee` as an absolute fee amount, computes `total_amount + challenge_fee`, and records the row in the `absoluteFee` audit bucket.
+    - If neither finance value is present, falls back to the current `BillingAccount.markup` and records that fallback in the audit report.
+    - Skips automated consumed-row planning for TopGear-exempt billing accounts and records those payments in the `exemptBillingAccounts` audit bucket.
+    - Apply mode runs billing mutations, post-apply total calculation, and report writing inside one billing database transaction. If a write, verification read, or report write fails before commit, the billing mutations are rolled back.
+    - Reconciles one assignment-level aggregate row for historical idempotency. Existing correct rows are left alone; a single incorrect row is updated; multiple existing rows are only moved when their total already matches the legacy expected amount.
+    - Exceptions such as missing assignments, missing project billing accounts, missing billing accounts, and ambiguous consumed duplicates are reported without blocking resolvable assignments.
+  - Validation:
+    - The dry-run/apply report includes expected legacy totals and current/projected billing totals.
+    - `verify:engagementPayments` invokes `psql` directly, so export `DATABASE_URL` in the shell before running it.
+    - If the source schemas are visible in one Postgres session, run:
+      - `pnpm run verify:engagementPayments -- -v finance_schema=finance -v engagements_schema=public -v projects_schema=projects -v billing_schema=billing-accounts -v exempt_billing_account_ids=80000062,80002800`
+    - The verification SQL lists mismatches between expected legacy engagement-payment consumes and `ConsumedAmount` rows with `externalType = ENGAGEMENT`. TopGear-exempt accounts are reported separately as `topgear_exempt_*` statuses.
+  - Rollback:
+    - Use the JSON report from the apply run. A successful apply only commits after that report is written. Delete rows listed with `action: "insert"` and `createdId`; restore rows listed with `action: "update_single"` from `previous`; restore rows listed with `action: "move_existing_rows"` from their `existingRows` billing account ids.
+    - If apply mode exits with an error before writing the report, the transaction rolled back and there should be no partial billing-ledger changes from that run.
+    - If apply mode exits with an error after a report file exists, run the verifier or a dry run before rollback; the billing transaction should have committed all planned actions or none.
+
 ## Downstream Usage
 
 - This service is consumed (directly or indirectly) by multiple Topcoder apps. The pointers below help with debugging.
