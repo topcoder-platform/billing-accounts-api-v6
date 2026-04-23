@@ -33,8 +33,13 @@ import {
 } from "../auth/constants";
 
 export interface BillingAccountsAuthUser {
+  id?: number | string;
   role?: string;
   roles?: string[] | string;
+  sub?: number | string;
+  tcUserId?: number | string;
+  user_id?: number | string;
+  userID?: number | string;
   userId?: number | string;
 }
 
@@ -112,24 +117,33 @@ function getNormalizedAuthUserRoles(
 /**
  * Resolves the caller user id as a trimmed string when present.
  *
+ * Topcoder JWT middleware has used a few decoded claim names across services,
+ * so this accepts the canonical `userId` first and then falls back to the other
+ * common user-id claim spellings.
+ *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns Normalized user id or `undefined` when missing.
  */
 function getNormalizedAuthUserId(
   authUser?: BillingAccountsAuthUser,
 ): string | undefined {
-  if (
-    typeof authUser?.userId === "number" &&
-    Number.isFinite(authUser.userId)
-  ) {
-    return String(authUser.userId);
+  const candidateUserId =
+    authUser?.userId ??
+    authUser?.user_id ??
+    authUser?.userID ??
+    authUser?.tcUserId ??
+    authUser?.id ??
+    authUser?.sub;
+
+  if (typeof candidateUserId === "number" && Number.isFinite(candidateUserId)) {
+    return String(candidateUserId);
   }
 
-  if (typeof authUser?.userId !== "string") {
+  if (typeof candidateUserId !== "string") {
     return undefined;
   }
 
-  const normalizedUserId = authUser.userId.trim();
+  const normalizedUserId = candidateUserId.trim();
 
   return normalizedUserId || undefined;
 }
