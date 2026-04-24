@@ -173,7 +173,7 @@ export class BillingAccountsController {
     buildOperationDoc({
       summary: "Get a billing account",
       description:
-        "Fetch a billing account by its identifier, including budget, client data, and normalized locked/consumed line items. Line items include amount, date, externalId, externalType, externalName, and challengeId only for legacy challenge compatibility. Project Managers can read only billing accounts granted to them.",
+        "Fetch a billing account by its identifier, including budget, client data, and normalized locked/consumed line items. Line items include amount, date, externalId, externalType, externalName, and challengeId only for legacy challenge compatibility. Project Managers can read only billing accounts granted to them. Copilot, Project Manager, and Talent Manager callers only receive locked/consumed line items for projects they belong to.",
       jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),

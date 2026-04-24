@@ -55,6 +55,14 @@ const RESTRICTED_PROJECT_MANAGER_READ_ROLES = [
   TOPCODER_PROJECT_MANAGER_ROLE,
 ];
 
+const PROJECT_ACCESS_FILTERED_LINE_ITEM_ROLES = [
+  COPILOT_ROLE,
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+];
+
 const BUDGET_AMOUNT_DECIMAL_PLACES = 4;
 
 interface BudgetAmountLineItem {
@@ -90,6 +98,11 @@ interface NormalizedEngagementConsume {
   billingAccountId: number;
   externalId: string;
   externalType: "ENGAGEMENT";
+}
+
+interface ProjectAccessFilteredLineItems {
+  lockedAmounts: BudgetAmountLineItem[];
+  consumedAmounts: BudgetAmountLineItem[];
 }
 
 /**
@@ -177,6 +190,40 @@ function resolveRestrictedProjectManagerUserId(
   );
 
   if (hasUnrestrictedReadRole) {
+    return undefined;
+  }
+
+  return getNormalizedAuthUserId(authUser) ?? null;
+}
+
+/**
+ * Returns the user id to use for project-level line-item filtering.
+ *
+ * Administrators keep full line-item visibility. Copilots, Project Managers,
+ * and Talent Managers only receive line items whose underlying challenge or
+ * engagement project can be resolved to an active project membership for their
+ * user id.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns User id to filter by, `null` when missing, or `undefined` when no
+ * filtering is required.
+ */
+function resolveProjectAccessFilteredLineItemUserId(
+  authUser?: BillingAccountsAuthUser,
+): string | null | undefined {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+  const hasAdminRole = normalizedRoles.includes(ADMIN_ROLE.toLowerCase());
+
+  if (hasAdminRole) {
+    return undefined;
+  }
+
+  const requiresProjectAccessFiltering =
+    PROJECT_ACCESS_FILTERED_LINE_ITEM_ROLES.some((role) =>
+      normalizedRoles.includes(role.toLowerCase()),
+    );
+
+  if (!requiresProjectAccessFiltering) {
     return undefined;
   }
 
@@ -382,7 +429,9 @@ export class BillingAccountsService {
    * `userId`. Missing access is surfaced as not found to avoid leaking account
    * existence. Locked and consumed line items expose `amount`, `date`,
    * `externalId`, `externalType`, and `externalName`; challenge rows also expose
-   * the deprecated `challengeId` compatibility alias.
+   * the deprecated `challengeId` compatibility alias. Copilot, Project Manager,
+   * and Talent Manager callers only receive line items for projects they belong
+   * to; unresolved project access hides the line item.
    *
    * @param billingAccountId Billing-account identifier.
    * @param authUser Authenticated caller context from `req.authUser`.
@@ -431,12 +480,20 @@ export class BillingAccountsService {
       0,
     );
     const remaining = Number(ba.budget) - consumed - locked;
+    const { lockedAmounts, consumedAmounts } =
+      await this.filterBudgetLineItemsForProjectAccess(
+        {
+          lockedAmounts: ba.lockedAmounts,
+          consumedAmounts: ba.consumedAmounts,
+        },
+        authUser,
+      );
     const externalNames = await this.externalBudgetEntryLookup.getExternalNames(
       [
-        ...ba.lockedAmounts.map((lineItem) =>
+        ...lockedAmounts.map((lineItem) =>
           this.toBudgetEntryReference(lineItem),
         ),
-        ...ba.consumedAmounts.map((lineItem) =>
+        ...consumedAmounts.map((lineItem) =>
           this.toBudgetEntryReference(lineItem),
         ),
       ],
@@ -444,10 +501,10 @@ export class BillingAccountsService {
 
     return {
       ...ba,
-      lockedAmounts: ba.lockedAmounts.map((lineItem) =>
+      lockedAmounts: lockedAmounts.map((lineItem) =>
         this.serializeBudgetLineItem(lineItem, externalNames),
       ),
-      consumedAmounts: ba.consumedAmounts.map((lineItem) =>
+      consumedAmounts: consumedAmounts.map((lineItem) =>
         this.serializeBudgetLineItem(lineItem, externalNames),
       ),
       lockedBudget: locked,
@@ -980,6 +1037,57 @@ export class BillingAccountsService {
     return {
       externalId: lineItem.externalId,
       externalType: lineItem.externalType,
+    };
+  }
+
+  /**
+   * Filters locked and consumed detail rows by project access when required.
+   *
+   * Caller roles that can view billing accounts across multiple projects still
+   * need project-level protection on individual payment rows. This helper keeps
+   * unrestricted callers unchanged, hides all rows when a restricted caller has
+   * no usable user id, and otherwise keeps only references whose project access
+   * is proven by the external lookup service.
+   *
+   * @param lineItems Locked and consumed budget rows from one billing account.
+   * @param authUser Authenticated caller context from `req.authUser`.
+   * @returns Filtered locked and consumed rows for the response detail arrays.
+   */
+  private async filterBudgetLineItemsForProjectAccess(
+    lineItems: ProjectAccessFilteredLineItems,
+    authUser?: BillingAccountsAuthUser,
+  ): Promise<ProjectAccessFilteredLineItems> {
+    const userId = resolveProjectAccessFilteredLineItemUserId(authUser);
+
+    if (userId === undefined) {
+      return lineItems;
+    }
+
+    if (userId === null) {
+      return { lockedAmounts: [], consumedAmounts: [] };
+    }
+
+    const accessibleReferenceKeys =
+      await this.externalBudgetEntryLookup.getProjectAccessibleReferenceKeys(
+        [
+          ...lineItems.lockedAmounts.map((lineItem) =>
+            this.toBudgetEntryReference(lineItem),
+          ),
+          ...lineItems.consumedAmounts.map((lineItem) =>
+            this.toBudgetEntryReference(lineItem),
+          ),
+        ],
+        userId,
+      );
+
+    const canViewLineItem = (lineItem: BudgetAmountLineItem) =>
+      accessibleReferenceKeys.has(
+        getBudgetEntryReferenceKey(this.toBudgetEntryReference(lineItem)),
+      );
+
+    return {
+      lockedAmounts: lineItems.lockedAmounts.filter(canViewLineItem),
+      consumedAmounts: lineItems.consumedAmounts.filter(canViewLineItem),
     };
   }
 
