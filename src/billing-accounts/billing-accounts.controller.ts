@@ -18,6 +18,7 @@ import { CreateBillingAccountDto } from "./dto/create-billing-account.dto";
 import { UpdateBillingAccountDto } from "./dto/update-billing-account.dto";
 import { LockAmountDto } from "./dto/lock-amount.dto";
 import { ConsumeAmountDto } from "./dto/consume-amount.dto";
+import { ConsumeAmountsDto } from "./dto/consume-amounts.dto";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { Scopes } from "../auth/decorators/scopes.decorator";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -37,6 +38,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiOkResponse,
+  ApiBadRequestResponse,
   ApiParam,
   ApiQuery,
   ApiTags,
@@ -171,7 +173,7 @@ export class BillingAccountsController {
     buildOperationDoc({
       summary: "Get a billing account",
       description:
-        "Fetch a billing account by its identifier, including budget and client data. Project Managers can read only billing accounts granted to them.",
+        "Fetch a billing account by its identifier, including budget, client data, and normalized locked/consumed line items. Line items include amount, date, externalId, externalType, externalName, and challengeId only for legacy challenge compatibility. Project Managers can read only billing accounts granted to them.",
       jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
@@ -221,14 +223,18 @@ export class BillingAccountsController {
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
-      summary: "Lock funds for a challenge",
+      summary: "Lock funds for a typed external budget entry",
       description:
-        "Reserve an amount on a billing account for a specific challenge.",
+        "Reserve a non-negative amount on a billing account for a challenge reference. Locking supports CHALLENGE externalType only, accepts externalId/externalType as the canonical reference fields, treats amount 0 as unlock, and fails when the post-lock reserved total would exceed the account budget.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Lock created/updated or unlocked" })
+  @ApiBadRequestResponse({
+    description:
+      "Invalid typed external reference, negative amount, challenge already consumed, or insufficient remaining funds",
+  })
   @ApiParam({
     name: "billingAccountId",
     description: "Billing Account ID",
@@ -242,20 +248,47 @@ export class BillingAccountsController {
     return this.service.lockAmount(id, dto);
   }
 
+  @Post("consume-amounts")
+  @UseGuards(RolesGuard, ScopesGuard)
+  @Roles(ADMIN_ROLE)
+  @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
+  @ApiOperation(
+    buildOperationDoc({
+      summary: "Atomically consume engagement budget rows",
+      description:
+        "Validate and create one or more ENGAGEMENT consumed rows in a single transaction. The request fails without writing partial rows when any item is invalid or would exceed remaining budget.",
+      jwtRoles: [ADMIN_ROLE],
+      m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
+    }),
+  )
+  @ApiOkResponse({ description: "Engagement consumed rows recorded" })
+  @ApiBadRequestResponse({
+    description:
+      "Invalid engagement reference, non-positive amount, or insufficient remaining funds",
+  })
+  @ApiBody({ type: ConsumeAmountsDto })
+  async consumeBatch(@Body() dto: ConsumeAmountsDto) {
+    return this.service.consumeAmounts(dto);
+  }
+
   @Patch(":billingAccountId/consume-amount")
   @UseGuards(RolesGuard, ScopesGuard)
   @Roles(ADMIN_ROLE)
   @Scopes(SCOPES.UPDATE_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
-      summary: "Consume reserved funds",
+      summary: "Consume funds for a typed external budget entry",
       description:
-        "Consume a previously locked amount for a challenge and record the transaction.",
+        "Consume a positive amount for a typed external reference using externalId/externalType. Challenge entries remove the matching lock and overwrite the existing consumed row; engagement entries are append-only. The request fails when the post-consume reserved total would exceed the account budget.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),
   )
   @ApiOkResponse({ description: "Consumed amount recorded" })
+  @ApiBadRequestResponse({
+    description:
+      "Invalid typed external reference, non-positive amount, or insufficient remaining funds",
+  })
   @ApiParam({
     name: "billingAccountId",
     description: "Billing Account ID",

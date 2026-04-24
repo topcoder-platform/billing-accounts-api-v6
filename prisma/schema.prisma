@@ -76,32 +76,40 @@ enum BAStatus {
   INACTIVE
 }
 
+enum BudgetEntryExternalType {
+  CHALLENGE
+  ENGAGEMENT
+}
+
 model LockedAmount {
   id              String   @id @default(uuid())
   billingAccountId Int
-  challengeId     String   // UUID or legacy int-as-string
+  externalId      String   // UUID or legacy int-as-string for challenges; assignment UUID for engagements
+  externalType    BudgetEntryExternalType @default(CHALLENGE)
   amount          Decimal  @db.Decimal(20,4)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   billingAccount  BillingAccount @relation(fields: [billingAccountId], references: [id])
 
-  @@unique([billingAccountId, challengeId], name: "locked_unique_challenge")
+  @@unique([billingAccountId, externalType, externalId], name: "locked_unique_external")
   @@index([billingAccountId])
+  @@index([externalType, externalId])
 }
 
 model ConsumedAmount {
   id              String   @id @default(uuid())
   billingAccountId Int
-  challengeId     String
+  externalId      String
+  externalType    BudgetEntryExternalType @default(CHALLENGE)
   amount          Decimal  @db.Decimal(20,4)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   billingAccount  BillingAccount @relation(fields: [billingAccountId], references: [id])
 
-  @@unique([billingAccountId, challengeId], name: "consumed_unique_challenge")
   @@index([billingAccountId])
+  @@index([billingAccountId, externalType, externalId])
 }
 
 // Optional: whitelist which users can access which BAs for userId filtering

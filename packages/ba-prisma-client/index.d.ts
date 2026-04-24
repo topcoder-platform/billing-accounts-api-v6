@@ -58,6 +58,14 @@ export const BAStatus: {
 
 export type BAStatus = (typeof BAStatus)[keyof typeof BAStatus]
 
+
+export const BudgetEntryExternalType: {
+  CHALLENGE: 'CHALLENGE',
+  ENGAGEMENT: 'ENGAGEMENT'
+};
+
+export type BudgetEntryExternalType = (typeof BudgetEntryExternalType)[keyof typeof BudgetEntryExternalType]
+
 }
 
 export type ClientStatus = $Enums.ClientStatus
@@ -67,6 +75,10 @@ export const ClientStatus: typeof $Enums.ClientStatus
 export type BAStatus = $Enums.BAStatus
 
 export const BAStatus: typeof $Enums.BAStatus
+
+export type BudgetEntryExternalType = $Enums.BudgetEntryExternalType
+
+export const BudgetEntryExternalType: typeof $Enums.BudgetEntryExternalType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -3852,7 +3864,8 @@ export namespace Prisma {
   export type LockedAmountMinAggregateOutputType = {
     id: string | null
     billingAccountId: number | null
-    challengeId: string | null
+    externalId: string | null
+    externalType: $Enums.BudgetEntryExternalType | null
     amount: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3861,7 +3874,8 @@ export namespace Prisma {
   export type LockedAmountMaxAggregateOutputType = {
     id: string | null
     billingAccountId: number | null
-    challengeId: string | null
+    externalId: string | null
+    externalType: $Enums.BudgetEntryExternalType | null
     amount: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3870,7 +3884,8 @@ export namespace Prisma {
   export type LockedAmountCountAggregateOutputType = {
     id: number
     billingAccountId: number
-    challengeId: number
+    externalId: number
+    externalType: number
     amount: number
     createdAt: number
     updatedAt: number
@@ -3891,7 +3906,8 @@ export namespace Prisma {
   export type LockedAmountMinAggregateInputType = {
     id?: true
     billingAccountId?: true
-    challengeId?: true
+    externalId?: true
+    externalType?: true
     amount?: true
     createdAt?: true
     updatedAt?: true
@@ -3900,7 +3916,8 @@ export namespace Prisma {
   export type LockedAmountMaxAggregateInputType = {
     id?: true
     billingAccountId?: true
-    challengeId?: true
+    externalId?: true
+    externalType?: true
     amount?: true
     createdAt?: true
     updatedAt?: true
@@ -3909,7 +3926,8 @@ export namespace Prisma {
   export type LockedAmountCountAggregateInputType = {
     id?: true
     billingAccountId?: true
-    challengeId?: true
+    externalId?: true
+    externalType?: true
     amount?: true
     createdAt?: true
     updatedAt?: true
@@ -4005,7 +4023,8 @@ export namespace Prisma {
   export type LockedAmountGroupByOutputType = {
     id: string
     billingAccountId: number
-    challengeId: string
+    externalId: string
+    externalType: $Enums.BudgetEntryExternalType
     amount: Decimal
     createdAt: Date
     updatedAt: Date
@@ -4033,7 +4052,8 @@ export namespace Prisma {
   export type LockedAmountSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4043,7 +4063,8 @@ export namespace Prisma {
   export type LockedAmountSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4053,7 +4074,8 @@ export namespace Prisma {
   export type LockedAmountSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4063,13 +4085,14 @@ export namespace Prisma {
   export type LockedAmountSelectScalar = {
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LockedAmountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "billingAccountId" | "challengeId" | "amount" | "createdAt" | "updatedAt", ExtArgs["result"]["lockedAmount"]>
+  export type LockedAmountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "billingAccountId" | "externalId" | "externalType" | "amount" | "createdAt" | "updatedAt", ExtArgs["result"]["lockedAmount"]>
   export type LockedAmountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     billingAccount?: boolean | BillingAccountDefaultArgs<ExtArgs>
   }
@@ -4088,7 +4111,8 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       billingAccountId: number
-      challengeId: string
+      externalId: string
+      externalType: $Enums.BudgetEntryExternalType
       amount: Prisma.Decimal
       createdAt: Date
       updatedAt: Date
@@ -4518,7 +4542,8 @@ export namespace Prisma {
   interface LockedAmountFieldRefs {
     readonly id: FieldRef<"LockedAmount", 'String'>
     readonly billingAccountId: FieldRef<"LockedAmount", 'Int'>
-    readonly challengeId: FieldRef<"LockedAmount", 'String'>
+    readonly externalId: FieldRef<"LockedAmount", 'String'>
+    readonly externalType: FieldRef<"LockedAmount", 'BudgetEntryExternalType'>
     readonly amount: FieldRef<"LockedAmount", 'Decimal'>
     readonly createdAt: FieldRef<"LockedAmount", 'DateTime'>
     readonly updatedAt: FieldRef<"LockedAmount", 'DateTime'>
@@ -4961,7 +4986,8 @@ export namespace Prisma {
   export type ConsumedAmountMinAggregateOutputType = {
     id: string | null
     billingAccountId: number | null
-    challengeId: string | null
+    externalId: string | null
+    externalType: $Enums.BudgetEntryExternalType | null
     amount: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4970,7 +4996,8 @@ export namespace Prisma {
   export type ConsumedAmountMaxAggregateOutputType = {
     id: string | null
     billingAccountId: number | null
-    challengeId: string | null
+    externalId: string | null
+    externalType: $Enums.BudgetEntryExternalType | null
     amount: Decimal | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4979,7 +5006,8 @@ export namespace Prisma {
   export type ConsumedAmountCountAggregateOutputType = {
     id: number
     billingAccountId: number
-    challengeId: number
+    externalId: number
+    externalType: number
     amount: number
     createdAt: number
     updatedAt: number
@@ -5000,7 +5028,8 @@ export namespace Prisma {
   export type ConsumedAmountMinAggregateInputType = {
     id?: true
     billingAccountId?: true
-    challengeId?: true
+    externalId?: true
+    externalType?: true
     amount?: true
     createdAt?: true
     updatedAt?: true
@@ -5009,7 +5038,8 @@ export namespace Prisma {
   export type ConsumedAmountMaxAggregateInputType = {
     id?: true
     billingAccountId?: true
-    challengeId?: true
+    externalId?: true
+    externalType?: true
     amount?: true
     createdAt?: true
     updatedAt?: true
@@ -5018,7 +5048,8 @@ export namespace Prisma {
   export type ConsumedAmountCountAggregateInputType = {
     id?: true
     billingAccountId?: true
-    challengeId?: true
+    externalId?: true
+    externalType?: true
     amount?: true
     createdAt?: true
     updatedAt?: true
@@ -5114,7 +5145,8 @@ export namespace Prisma {
   export type ConsumedAmountGroupByOutputType = {
     id: string
     billingAccountId: number
-    challengeId: string
+    externalId: string
+    externalType: $Enums.BudgetEntryExternalType
     amount: Decimal
     createdAt: Date
     updatedAt: Date
@@ -5142,7 +5174,8 @@ export namespace Prisma {
   export type ConsumedAmountSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -5152,7 +5185,8 @@ export namespace Prisma {
   export type ConsumedAmountSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -5162,7 +5196,8 @@ export namespace Prisma {
   export type ConsumedAmountSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -5172,13 +5207,14 @@ export namespace Prisma {
   export type ConsumedAmountSelectScalar = {
     id?: boolean
     billingAccountId?: boolean
-    challengeId?: boolean
+    externalId?: boolean
+    externalType?: boolean
     amount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ConsumedAmountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "billingAccountId" | "challengeId" | "amount" | "createdAt" | "updatedAt", ExtArgs["result"]["consumedAmount"]>
+  export type ConsumedAmountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "billingAccountId" | "externalId" | "externalType" | "amount" | "createdAt" | "updatedAt", ExtArgs["result"]["consumedAmount"]>
   export type ConsumedAmountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     billingAccount?: boolean | BillingAccountDefaultArgs<ExtArgs>
   }
@@ -5197,7 +5233,8 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       billingAccountId: number
-      challengeId: string
+      externalId: string
+      externalType: $Enums.BudgetEntryExternalType
       amount: Prisma.Decimal
       createdAt: Date
       updatedAt: Date
@@ -5627,7 +5664,8 @@ export namespace Prisma {
   interface ConsumedAmountFieldRefs {
     readonly id: FieldRef<"ConsumedAmount", 'String'>
     readonly billingAccountId: FieldRef<"ConsumedAmount", 'Int'>
-    readonly challengeId: FieldRef<"ConsumedAmount", 'String'>
+    readonly externalId: FieldRef<"ConsumedAmount", 'String'>
+    readonly externalType: FieldRef<"ConsumedAmount", 'BudgetEntryExternalType'>
     readonly amount: FieldRef<"ConsumedAmount", 'Decimal'>
     readonly createdAt: FieldRef<"ConsumedAmount", 'DateTime'>
     readonly updatedAt: FieldRef<"ConsumedAmount", 'DateTime'>
@@ -7181,7 +7219,8 @@ export namespace Prisma {
   export const LockedAmountScalarFieldEnum: {
     id: 'id',
     billingAccountId: 'billingAccountId',
-    challengeId: 'challengeId',
+    externalId: 'externalId',
+    externalType: 'externalType',
     amount: 'amount',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -7193,7 +7232,8 @@ export namespace Prisma {
   export const ConsumedAmountScalarFieldEnum: {
     id: 'id',
     billingAccountId: 'billingAccountId',
-    challengeId: 'challengeId',
+    externalId: 'externalId',
+    externalType: 'externalType',
     amount: 'amount',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -7329,6 +7369,20 @@ export namespace Prisma {
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'BudgetEntryExternalType'
+   */
+  export type EnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BudgetEntryExternalType'>
+    
+
+
+  /**
+   * Reference to a field of type 'BudgetEntryExternalType[]'
+   */
+  export type ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BudgetEntryExternalType[]'>
     
 
 
@@ -7566,7 +7620,8 @@ export namespace Prisma {
     NOT?: LockedAmountWhereInput | LockedAmountWhereInput[]
     id?: StringFilter<"LockedAmount"> | string
     billingAccountId?: IntFilter<"LockedAmount"> | number
-    challengeId?: StringFilter<"LockedAmount"> | string
+    externalId?: StringFilter<"LockedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeFilter<"LockedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalFilter<"LockedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"LockedAmount"> | Date | string
     updatedAt?: DateTimeFilter<"LockedAmount"> | Date | string
@@ -7576,7 +7631,8 @@ export namespace Prisma {
   export type LockedAmountOrderByWithRelationInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7585,22 +7641,24 @@ export namespace Prisma {
 
   export type LockedAmountWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    locked_unique_challenge?: LockedAmountLocked_unique_challengeCompoundUniqueInput
+    locked_unique_external?: LockedAmountLocked_unique_externalCompoundUniqueInput
     AND?: LockedAmountWhereInput | LockedAmountWhereInput[]
     OR?: LockedAmountWhereInput[]
     NOT?: LockedAmountWhereInput | LockedAmountWhereInput[]
     billingAccountId?: IntFilter<"LockedAmount"> | number
-    challengeId?: StringFilter<"LockedAmount"> | string
+    externalId?: StringFilter<"LockedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeFilter<"LockedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalFilter<"LockedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"LockedAmount"> | Date | string
     updatedAt?: DateTimeFilter<"LockedAmount"> | Date | string
     billingAccount?: XOR<BillingAccountScalarRelationFilter, BillingAccountWhereInput>
-  }, "id" | "locked_unique_challenge">
+  }, "id" | "locked_unique_external">
 
   export type LockedAmountOrderByWithAggregationInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7617,7 +7675,8 @@ export namespace Prisma {
     NOT?: LockedAmountScalarWhereWithAggregatesInput | LockedAmountScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"LockedAmount"> | string
     billingAccountId?: IntWithAggregatesFilter<"LockedAmount"> | number
-    challengeId?: StringWithAggregatesFilter<"LockedAmount"> | string
+    externalId?: StringWithAggregatesFilter<"LockedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeWithAggregatesFilter<"LockedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalWithAggregatesFilter<"LockedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeWithAggregatesFilter<"LockedAmount"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LockedAmount"> | Date | string
@@ -7629,7 +7688,8 @@ export namespace Prisma {
     NOT?: ConsumedAmountWhereInput | ConsumedAmountWhereInput[]
     id?: StringFilter<"ConsumedAmount"> | string
     billingAccountId?: IntFilter<"ConsumedAmount"> | number
-    challengeId?: StringFilter<"ConsumedAmount"> | string
+    externalId?: StringFilter<"ConsumedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeFilter<"ConsumedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalFilter<"ConsumedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"ConsumedAmount"> | Date | string
     updatedAt?: DateTimeFilter<"ConsumedAmount"> | Date | string
@@ -7639,7 +7699,8 @@ export namespace Prisma {
   export type ConsumedAmountOrderByWithRelationInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7648,22 +7709,23 @@ export namespace Prisma {
 
   export type ConsumedAmountWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    consumed_unique_challenge?: ConsumedAmountConsumed_unique_challengeCompoundUniqueInput
     AND?: ConsumedAmountWhereInput | ConsumedAmountWhereInput[]
     OR?: ConsumedAmountWhereInput[]
     NOT?: ConsumedAmountWhereInput | ConsumedAmountWhereInput[]
     billingAccountId?: IntFilter<"ConsumedAmount"> | number
-    challengeId?: StringFilter<"ConsumedAmount"> | string
+    externalId?: StringFilter<"ConsumedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeFilter<"ConsumedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalFilter<"ConsumedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"ConsumedAmount"> | Date | string
     updatedAt?: DateTimeFilter<"ConsumedAmount"> | Date | string
     billingAccount?: XOR<BillingAccountScalarRelationFilter, BillingAccountWhereInput>
-  }, "id" | "consumed_unique_challenge">
+  }, "id">
 
   export type ConsumedAmountOrderByWithAggregationInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7680,7 +7742,8 @@ export namespace Prisma {
     NOT?: ConsumedAmountScalarWhereWithAggregatesInput | ConsumedAmountScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ConsumedAmount"> | string
     billingAccountId?: IntWithAggregatesFilter<"ConsumedAmount"> | number
-    challengeId?: StringWithAggregatesFilter<"ConsumedAmount"> | string
+    externalId?: StringWithAggregatesFilter<"ConsumedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeWithAggregatesFilter<"ConsumedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalWithAggregatesFilter<"ConsumedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeWithAggregatesFilter<"ConsumedAmount"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ConsumedAmount"> | Date | string
@@ -7991,7 +8054,8 @@ export namespace Prisma {
 
   export type LockedAmountCreateInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8001,7 +8065,8 @@ export namespace Prisma {
   export type LockedAmountUncheckedCreateInput = {
     id?: string
     billingAccountId: number
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8009,7 +8074,8 @@ export namespace Prisma {
 
   export type LockedAmountUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8019,7 +8085,8 @@ export namespace Prisma {
   export type LockedAmountUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     billingAccountId?: IntFieldUpdateOperationsInput | number
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8028,7 +8095,8 @@ export namespace Prisma {
   export type LockedAmountCreateManyInput = {
     id?: string
     billingAccountId: number
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8036,7 +8104,8 @@ export namespace Prisma {
 
   export type LockedAmountUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8045,7 +8114,8 @@ export namespace Prisma {
   export type LockedAmountUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     billingAccountId?: IntFieldUpdateOperationsInput | number
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8053,7 +8123,8 @@ export namespace Prisma {
 
   export type ConsumedAmountCreateInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8063,7 +8134,8 @@ export namespace Prisma {
   export type ConsumedAmountUncheckedCreateInput = {
     id?: string
     billingAccountId: number
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8071,7 +8143,8 @@ export namespace Prisma {
 
   export type ConsumedAmountUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8081,7 +8154,8 @@ export namespace Prisma {
   export type ConsumedAmountUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     billingAccountId?: IntFieldUpdateOperationsInput | number
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8090,7 +8164,8 @@ export namespace Prisma {
   export type ConsumedAmountCreateManyInput = {
     id?: string
     billingAccountId: number
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8098,7 +8173,8 @@ export namespace Prisma {
 
   export type ConsumedAmountUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8107,7 +8183,8 @@ export namespace Prisma {
   export type ConsumedAmountUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     billingAccountId?: IntFieldUpdateOperationsInput | number
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8571,20 +8648,29 @@ export namespace Prisma {
     _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
+  export type EnumBudgetEntryExternalTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BudgetEntryExternalType | EnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel> | $Enums.BudgetEntryExternalType
+  }
+
   export type BillingAccountScalarRelationFilter = {
     is?: BillingAccountWhereInput
     isNot?: BillingAccountWhereInput
   }
 
-  export type LockedAmountLocked_unique_challengeCompoundUniqueInput = {
+  export type LockedAmountLocked_unique_externalCompoundUniqueInput = {
     billingAccountId: number
-    challengeId: string
+    externalType: $Enums.BudgetEntryExternalType
+    externalId: string
   }
 
   export type LockedAmountCountOrderByAggregateInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8598,7 +8684,8 @@ export namespace Prisma {
   export type LockedAmountMaxOrderByAggregateInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8607,7 +8694,8 @@ export namespace Prisma {
   export type LockedAmountMinOrderByAggregateInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8618,15 +8706,21 @@ export namespace Prisma {
     amount?: SortOrder
   }
 
-  export type ConsumedAmountConsumed_unique_challengeCompoundUniqueInput = {
-    billingAccountId: number
-    challengeId: string
+  export type EnumBudgetEntryExternalTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BudgetEntryExternalType | EnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBudgetEntryExternalTypeWithAggregatesFilter<$PrismaModel> | $Enums.BudgetEntryExternalType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel>
+    _max?: NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel>
   }
 
   export type ConsumedAmountCountOrderByAggregateInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8640,7 +8734,8 @@ export namespace Prisma {
   export type ConsumedAmountMaxOrderByAggregateInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8649,7 +8744,8 @@ export namespace Prisma {
   export type ConsumedAmountMinOrderByAggregateInput = {
     id?: SortOrder
     billingAccountId?: SortOrder
-    challengeId?: SortOrder
+    externalId?: SortOrder
+    externalType?: SortOrder
     amount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8932,6 +9028,10 @@ export namespace Prisma {
     create?: XOR<BillingAccountCreateWithoutLockedAmountsInput, BillingAccountUncheckedCreateWithoutLockedAmountsInput>
     connectOrCreate?: BillingAccountCreateOrConnectWithoutLockedAmountsInput
     connect?: BillingAccountWhereUniqueInput
+  }
+
+  export type EnumBudgetEntryExternalTypeFieldUpdateOperationsInput = {
+    set?: $Enums.BudgetEntryExternalType
   }
 
   export type BillingAccountUpdateOneRequiredWithoutLockedAmountsNestedInput = {
@@ -9232,6 +9332,23 @@ export namespace Prisma {
     _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
+  export type NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BudgetEntryExternalType | EnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel> | $Enums.BudgetEntryExternalType
+  }
+
+  export type NestedEnumBudgetEntryExternalTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BudgetEntryExternalType | EnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BudgetEntryExternalType[] | ListEnumBudgetEntryExternalTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBudgetEntryExternalTypeWithAggregatesFilter<$PrismaModel> | $Enums.BudgetEntryExternalType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel>
+    _max?: NestedEnumBudgetEntryExternalTypeFilter<$PrismaModel>
+  }
+
   export type BillingAccountCreateWithoutClientInput = {
     projectId?: string | null
     name: string
@@ -9362,7 +9479,8 @@ export namespace Prisma {
 
   export type LockedAmountCreateWithoutBillingAccountInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9370,7 +9488,8 @@ export namespace Prisma {
 
   export type LockedAmountUncheckedCreateWithoutBillingAccountInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9388,7 +9507,8 @@ export namespace Prisma {
 
   export type ConsumedAmountCreateWithoutBillingAccountInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9396,7 +9516,8 @@ export namespace Prisma {
 
   export type ConsumedAmountUncheckedCreateWithoutBillingAccountInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9489,7 +9610,8 @@ export namespace Prisma {
     NOT?: LockedAmountScalarWhereInput | LockedAmountScalarWhereInput[]
     id?: StringFilter<"LockedAmount"> | string
     billingAccountId?: IntFilter<"LockedAmount"> | number
-    challengeId?: StringFilter<"LockedAmount"> | string
+    externalId?: StringFilter<"LockedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeFilter<"LockedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalFilter<"LockedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"LockedAmount"> | Date | string
     updatedAt?: DateTimeFilter<"LockedAmount"> | Date | string
@@ -9517,7 +9639,8 @@ export namespace Prisma {
     NOT?: ConsumedAmountScalarWhereInput | ConsumedAmountScalarWhereInput[]
     id?: StringFilter<"ConsumedAmount"> | string
     billingAccountId?: IntFilter<"ConsumedAmount"> | number
-    challengeId?: StringFilter<"ConsumedAmount"> | string
+    externalId?: StringFilter<"ConsumedAmount"> | string
+    externalType?: EnumBudgetEntryExternalTypeFilter<"ConsumedAmount"> | $Enums.BudgetEntryExternalType
     amount?: DecimalFilter<"ConsumedAmount"> | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFilter<"ConsumedAmount"> | Date | string
     updatedAt?: DateTimeFilter<"ConsumedAmount"> | Date | string
@@ -9986,7 +10109,8 @@ export namespace Prisma {
 
   export type LockedAmountCreateManyBillingAccountInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9994,7 +10118,8 @@ export namespace Prisma {
 
   export type ConsumedAmountCreateManyBillingAccountInput = {
     id?: string
-    challengeId: string
+    externalId: string
+    externalType?: $Enums.BudgetEntryExternalType
     amount: Decimal | DecimalJsLike | number | string
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -10008,7 +10133,8 @@ export namespace Prisma {
 
   export type LockedAmountUpdateWithoutBillingAccountInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10016,7 +10142,8 @@ export namespace Prisma {
 
   export type LockedAmountUncheckedUpdateWithoutBillingAccountInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10024,7 +10151,8 @@ export namespace Prisma {
 
   export type LockedAmountUncheckedUpdateManyWithoutBillingAccountInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10032,7 +10160,8 @@ export namespace Prisma {
 
   export type ConsumedAmountUpdateWithoutBillingAccountInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10040,7 +10169,8 @@ export namespace Prisma {
 
   export type ConsumedAmountUncheckedUpdateWithoutBillingAccountInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10048,7 +10178,8 @@ export namespace Prisma {
 
   export type ConsumedAmountUncheckedUpdateManyWithoutBillingAccountInput = {
     id?: StringFieldUpdateOperationsInput | string
-    challengeId?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalType?: EnumBudgetEntryExternalTypeFieldUpdateOperationsInput | $Enums.BudgetEntryExternalType
     amount?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

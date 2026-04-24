@@ -32,7 +32,14 @@ export class ScopesGuard implements CanActivate {
           .map((s: string) => s.trim())
           .filter(Boolean);
 
-    const ok = required.some((s) => scopes.includes(s));
+    const normalizedRequiredScopes = required.map((scope) =>
+      scope.trim().toLowerCase(),
+    );
+    const normalizedScopes = scopes.map((scope) => scope.trim().toLowerCase());
+
+    const ok = normalizedScopes.some((scope) =>
+      normalizedRequiredScopes.includes(scope),
+    );
     if (ok) return true;
 
     const fallbackRoles = this.reflector.getAllAndOverride<string[]>(
@@ -48,7 +55,16 @@ export class ScopesGuard implements CanActivate {
             .map((r: string) => r.trim())
             .filter(Boolean);
 
-      const roleOk = roles.some((r: string) => fallbackRoles.includes(r));
+      const normalizedFallbackRoles = fallbackRoles.map((role) =>
+        role.trim().toLowerCase(),
+      );
+      const normalizedRoles = roles.map((role: string) =>
+        role.trim().toLowerCase(),
+      );
+
+      const roleOk = normalizedRoles.some((role: string) =>
+        normalizedFallbackRoles.includes(role),
+      );
       if (roleOk) return true;
     }
 

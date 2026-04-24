@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { PrismaService } from "../common/prisma.service";
 import { Prisma } from "@prisma/client";
 import { QueryBillingAccountsDto } from "./dto/query-billing-accounts.dto";
@@ -6,6 +10,17 @@ import { CreateBillingAccountDto } from "./dto/create-billing-account.dto";
 import { UpdateBillingAccountDto } from "./dto/update-billing-account.dto";
 import { LockAmountDto } from "./dto/lock-amount.dto";
 import { ConsumeAmountDto } from "./dto/consume-amount.dto";
+import {
+  ConsumeAmountsDto,
+  ConsumeAmountsItemDto,
+} from "./dto/consume-amounts.dto";
+import { ExternalBudgetEntryLookupService } from "./external-budget-entry-lookup.service";
+import {
+  getBudgetEntryReferenceKey,
+  resolveBudgetEntryReference,
+  type BudgetEntryReference,
+  type BudgetEntryExternalTypeValue,
+} from "./budget-entry.util";
 import { MembersLookupService } from "../common/members-lookup.service";
 import SalesforceService from "../common/salesforce.service";
 import {
@@ -18,8 +33,13 @@ import {
 } from "../auth/constants";
 
 export interface BillingAccountsAuthUser {
+  id?: number | string;
   role?: string;
   roles?: string[] | string;
+  sub?: number | string;
+  tcUserId?: number | string;
+  user_id?: number | string;
+  userID?: number | string;
   userId?: number | string;
 }
 
@@ -34,6 +54,43 @@ const RESTRICTED_PROJECT_MANAGER_READ_ROLES = [
   PROJECT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
 ];
+
+const BUDGET_AMOUNT_DECIMAL_PLACES = 4;
+
+interface BudgetAmountLineItem {
+  id: string;
+  billingAccountId: number;
+  externalId: string;
+  externalType: BudgetEntryExternalTypeValue;
+  amount: Prisma.Decimal;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface BillingAccountBudgetLockRow {
+  budget: Prisma.Decimal;
+}
+
+interface BudgetMutationContext {
+  budget: Prisma.Decimal;
+  lockedTotal: Prisma.Decimal;
+  consumedTotal: Prisma.Decimal;
+  matchingLock: BudgetAmountLineItem | null;
+  matchingConsumed: BudgetAmountLineItem | null;
+}
+
+interface BudgetAccountTotals {
+  budget: Prisma.Decimal;
+  lockedTotal: Prisma.Decimal;
+  consumedTotal: Prisma.Decimal;
+}
+
+interface NormalizedEngagementConsume {
+  amount: Prisma.Decimal;
+  billingAccountId: number;
+  externalId: string;
+  externalType: "ENGAGEMENT";
+}
 
 /**
  * Normalizes authenticated caller roles for case-insensitive comparisons.
@@ -60,24 +117,33 @@ function getNormalizedAuthUserRoles(
 /**
  * Resolves the caller user id as a trimmed string when present.
  *
+ * Topcoder JWT middleware has used a few decoded claim names across services,
+ * so this accepts the canonical `userId` first and then falls back to the other
+ * common user-id claim spellings.
+ *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns Normalized user id or `undefined` when missing.
  */
 function getNormalizedAuthUserId(
   authUser?: BillingAccountsAuthUser,
 ): string | undefined {
-  if (
-    typeof authUser?.userId === "number" &&
-    Number.isFinite(authUser.userId)
-  ) {
-    return String(authUser.userId);
+  const candidateUserId =
+    authUser?.userId ??
+    authUser?.user_id ??
+    authUser?.userID ??
+    authUser?.tcUserId ??
+    authUser?.id ??
+    authUser?.sub;
+
+  if (typeof candidateUserId === "number" && Number.isFinite(candidateUserId)) {
+    return String(candidateUserId);
   }
 
-  if (typeof authUser?.userId !== "string") {
+  if (typeof candidateUserId !== "string") {
     return undefined;
   }
 
-  const normalizedUserId = authUser.userId.trim();
+  const normalizedUserId = candidateUserId.trim();
 
   return normalizedUserId || undefined;
 }
@@ -121,6 +187,7 @@ function resolveRestrictedProjectManagerUserId(
 export class BillingAccountsService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly externalBudgetEntryLookup: ExternalBudgetEntryLookupService,
     private readonly membersLookup: MembersLookupService,
     private readonly salesforce: SalesforceService,
   ) {}
@@ -308,11 +375,14 @@ export class BillingAccountsService {
   }
 
   /**
-   * Fetches a single billing account and its budget aggregates.
+   * Fetches a single billing account, its normalized budget line items, and
+   * budget aggregates.
    *
    * Project Manager callers can read only billing accounts granted to their own
    * `userId`. Missing access is surfaced as not found to avoid leaking account
-   * existence.
+   * existence. Locked and consumed line items expose `amount`, `date`,
+   * `externalId`, `externalType`, and `externalName`; challenge rows also expose
+   * the deprecated `challengeId` compatibility alias.
    *
    * @param billingAccountId Billing-account identifier.
    * @param authUser Authenticated caller context from `req.authUser`.
@@ -361,9 +431,25 @@ export class BillingAccountsService {
       0,
     );
     const remaining = Number(ba.budget) - consumed - locked;
+    const externalNames = await this.externalBudgetEntryLookup.getExternalNames(
+      [
+        ...ba.lockedAmounts.map((lineItem) =>
+          this.toBudgetEntryReference(lineItem),
+        ),
+        ...ba.consumedAmounts.map((lineItem) =>
+          this.toBudgetEntryReference(lineItem),
+        ),
+      ],
+    );
 
     return {
       ...ba,
+      lockedAmounts: ba.lockedAmounts.map((lineItem) =>
+        this.serializeBudgetLineItem(lineItem, externalNames),
+      ),
+      consumedAmounts: ba.consumedAmounts.map((lineItem) =>
+        this.serializeBudgetLineItem(lineItem, externalNames),
+      ),
       lockedBudget: locked,
       consumedBudget: consumed,
       totalBudgetRemaining: remaining,
@@ -417,27 +503,59 @@ export class BillingAccountsService {
     });
   }
 
+  /**
+   * Locks or unlocks budget for a challenge external reference.
+   *
+   * `externalId`/`externalType` are the canonical request fields. Legacy
+   * `challengeId` remains accepted as an alias for challenge callers. Locking
+   * is challenge-only, overwrites the matching challenge lock row, and rejects
+   * requests when the post-operation locked plus consumed total would exceed
+   * the billing-account budget.
+   *
+   * @param billingAccountId Billing account identifier.
+   * @param dto Lock request containing amount and external reference.
+   * @returns Updated lock row, or `{ unlocked: true }` when amount is zero.
+   * @throws NotFoundException When the billing account does not exist.
+   * @throws BadRequestException When the reference is invalid, already consumed,
+   * amount is negative, or has insufficient remaining funds.
+   */
   async lockAmount(billingAccountId: number, dto: LockAmountDto) {
+    const requestedLock = this.toLedgerBudgetAmount(dto.amount, "lock");
+    this.assertBudgetAmountIsNonNegative(requestedLock, "lock");
+
+    const reference = resolveBudgetEntryReference(dto);
+    this.assertChallengeAliasMatchesType(dto, reference);
+
+    if (reference.externalType !== "CHALLENGE") {
+      throw new BadRequestException(
+        "Only CHALLENGE externalType can be locked",
+      );
+    }
+
     // If amount is 0, unlock (delete any lock)
     return this.prisma.$transaction(async (tx) => {
-      // ensure no consumed record exists
-      const consumed = await tx.consumedAmount.findUnique({
-        where: {
-          consumed_unique_challenge: {
-            billingAccountId,
-            challengeId: dto.challengeId,
-          },
-        },
-      });
-      if (consumed) {
-        throw new Error(
+      const context = await this.loadBudgetMutationContext(
+        tx,
+        billingAccountId,
+        reference,
+      );
+      if (context.matchingConsumed) {
+        throw new BadRequestException(
           "Challenge already consumed against this billing account",
         );
       }
 
-      if (dto.amount === 0) {
+      this.assertBudgetCanReserve(
+        context.budget,
+        context.lockedTotal
+          .minus(context.matchingLock?.amount ?? 0)
+          .plus(context.consumedTotal)
+          .plus(requestedLock),
+      );
+
+      if (requestedLock.isZero()) {
         await tx.lockedAmount.deleteMany({
-          where: { billingAccountId, challengeId: dto.challengeId },
+          where: { billingAccountId, ...reference },
         });
         return { unlocked: true };
       }
@@ -445,46 +563,454 @@ export class BillingAccountsService {
       // upsert lock
       const rec = await tx.lockedAmount.upsert({
         where: {
-          locked_unique_challenge: {
+          locked_unique_external: {
             billingAccountId,
-            challengeId: dto.challengeId,
+            externalId: reference.externalId,
+            externalType: reference.externalType,
           },
         },
         create: {
           billingAccountId,
-          challengeId: dto.challengeId,
-          amount: new Prisma.Decimal(dto.amount),
+          externalId: reference.externalId,
+          externalType: reference.externalType,
+          amount: requestedLock,
         },
-        update: { amount: new Prisma.Decimal(dto.amount) },
+        update: { amount: requestedLock },
       });
       return rec;
     });
   }
 
+  /**
+   * Consumes budget for a typed external reference.
+   *
+   * Challenge entries preserve existing overwrite semantics and clear any
+   * matching lock. Engagement entries are append-only, one row per payment.
+   * Requests are rejected when the post-operation locked plus consumed total
+   * would exceed the billing-account budget. Zero consumes are rejected so
+   * `lockAmount` remains the only zero-value unlock path.
+   *
+   * @param billingAccountId Billing account identifier.
+   * @param dto Consume request containing amount and external reference.
+   * @returns Consumed amount row.
+   * @throws NotFoundException When the billing account does not exist.
+   * @throws BadRequestException When the external reference is missing or has
+   * a non-positive amount or insufficient remaining funds.
+   */
   async consumeAmount(billingAccountId: number, dto: ConsumeAmountDto) {
+    const requestedConsume = this.toLedgerBudgetAmount(dto.amount, "consume");
+    this.assertBudgetAmountIsPositive(requestedConsume, "consume");
+
+    const reference = resolveBudgetEntryReference(dto);
+    this.assertChallengeAliasMatchesType(dto, reference);
+
     return this.prisma.$transaction(async (tx) => {
+      const context = await this.loadBudgetMutationContext(
+        tx,
+        billingAccountId,
+        reference,
+      );
+
+      if (reference.externalType === "ENGAGEMENT") {
+        this.assertBudgetCanReserve(
+          context.budget,
+          context.lockedTotal
+            .plus(context.consumedTotal)
+            .plus(requestedConsume),
+        );
+
+        return tx.consumedAmount.create({
+          data: {
+            billingAccountId,
+            externalId: reference.externalId,
+            externalType: reference.externalType,
+            amount: requestedConsume,
+          },
+        });
+      }
+
+      this.assertBudgetCanReserve(
+        context.budget,
+        context.lockedTotal
+          .minus(context.matchingLock?.amount ?? 0)
+          .plus(
+            context.consumedTotal.minus(context.matchingConsumed?.amount ?? 0),
+          )
+          .plus(requestedConsume),
+      );
+
       // delete any lock first for this challenge
       await tx.lockedAmount.deleteMany({
-        where: { billingAccountId, challengeId: dto.challengeId },
+        where: { billingAccountId, ...reference },
       });
 
-      // upsert consumed amount
-      const rec = await tx.consumedAmount.upsert({
-        where: {
-          consumed_unique_challenge: {
-            billingAccountId,
-            challengeId: dto.challengeId,
-          },
-        },
-        create: {
+      if (context.matchingConsumed) {
+        return tx.consumedAmount.update({
+          where: { id: context.matchingConsumed.id },
+          data: { amount: requestedConsume },
+        });
+      }
+
+      return tx.consumedAmount.create({
+        data: {
           billingAccountId,
-          challengeId: dto.challengeId,
-          amount: new Prisma.Decimal(dto.amount),
+          externalId: reference.externalId,
+          externalType: reference.externalType,
+          amount: requestedConsume,
         },
-        update: { amount: new Prisma.Decimal(dto.amount) },
       });
-      return rec;
     });
+  }
+
+  /**
+   * Atomically consumes multiple engagement budget rows.
+   *
+   * All amounts are normalized to the `Decimal(20,4)` ledger scale before any
+   * remaining-budget comparison. The method validates every requested consume
+   * against locked billing-account rows first, then creates all consumed rows in
+   * one database transaction so partial engagement-payment requests roll back
+   * together.
+   *
+   * @param dto Batch consume request containing engagement consume items.
+   * @returns Count of consumed rows created.
+   * @throws NotFoundException When any billing account does not exist.
+   * @throws BadRequestException When an item is not an engagement consume, has
+   * invalid amount data, or would exceed remaining budget.
+   */
+  async consumeAmounts(dto: ConsumeAmountsDto) {
+    if (!Array.isArray(dto.consumes) || dto.consumes.length === 0) {
+      throw new BadRequestException("At least one consume is required");
+    }
+
+    const consumes = dto.consumes.map((consume, index) =>
+      this.normalizeEngagementConsume(consume, index),
+    );
+    const consumesByBillingAccountId =
+      this.groupConsumesByBillingAccountId(consumes);
+
+    return this.prisma.$transaction(async (tx) => {
+      for (const [billingAccountId, billingAccountConsumes] of Array.from(
+        consumesByBillingAccountId.entries(),
+      ).sort(
+        ([leftBillingAccountId], [rightBillingAccountId]) =>
+          leftBillingAccountId - rightBillingAccountId,
+      )) {
+        const totals = await this.loadBudgetAccountTotals(tx, billingAccountId);
+        const requestedTotal = billingAccountConsumes.reduce(
+          (sum, consume) => sum.plus(consume.amount),
+          new Prisma.Decimal(0),
+        );
+
+        this.assertBudgetCanReserve(
+          totals.budget,
+          totals.lockedTotal.plus(totals.consumedTotal).plus(requestedTotal),
+        );
+      }
+
+      return tx.consumedAmount.createMany({
+        data: consumes.map((consume) => ({
+          amount: consume.amount,
+          billingAccountId: consume.billingAccountId,
+          externalId: consume.externalId,
+          externalType: consume.externalType,
+        })),
+      });
+    });
+  }
+
+  /**
+   * Normalizes one batch item into an engagement consume ready for validation.
+   *
+   * @param consume Incoming batch item.
+   * @param index Zero-based item index used in validation messages.
+   * @returns Canonical engagement consume with a Decimal(20,4)-scaled amount.
+   * @throws BadRequestException When the billing account, reference, type, or
+   * amount is invalid.
+   */
+  private normalizeEngagementConsume(
+    consume: ConsumeAmountsItemDto,
+    index: number,
+  ): NormalizedEngagementConsume {
+    if (
+      !Number.isSafeInteger(consume.billingAccountId) ||
+      consume.billingAccountId <= 0
+    ) {
+      throw new BadRequestException(
+        `consumes[${index}].billingAccountId must be a positive integer`,
+      );
+    }
+
+    const reference = resolveBudgetEntryReference({
+      challengeId: consume.challengeId,
+      externalId: consume.externalId,
+      externalType: consume.externalType ?? "ENGAGEMENT",
+    });
+    this.assertChallengeAliasMatchesType(consume, reference);
+
+    if (reference.externalType !== "ENGAGEMENT") {
+      throw new BadRequestException(
+        `consumes[${index}].externalType must be ENGAGEMENT`,
+      );
+    }
+
+    const amount = this.toLedgerBudgetAmount(consume.amount, "consume");
+    this.assertBudgetAmountIsPositive(amount, "consume");
+
+    return {
+      amount,
+      billingAccountId: consume.billingAccountId,
+      externalId: reference.externalId,
+      externalType: "ENGAGEMENT",
+    };
+  }
+
+  /**
+   * Groups normalized engagement consumes by billing account id.
+   *
+   * @param consumes Normalized engagement consumes.
+   * @returns Map from billing account id to consumes targeting that account.
+   */
+  private groupConsumesByBillingAccountId(
+    consumes: NormalizedEngagementConsume[],
+  ): Map<number, NormalizedEngagementConsume[]> {
+    const grouped = new Map<number, NormalizedEngagementConsume[]>();
+
+    for (const consume of consumes) {
+      const billingAccountConsumes =
+        grouped.get(consume.billingAccountId) ?? [];
+      billingAccountConsumes.push(consume);
+      grouped.set(consume.billingAccountId, billingAccountConsumes);
+    }
+
+    return grouped;
+  }
+
+  /**
+   * Ensures the deprecated `challengeId` alias is only used for challenge
+   * references and never as an engagement identifier.
+   *
+   * @param input Incoming lock or consume DTO.
+   * @param reference Resolved typed external reference.
+   * @throws BadRequestException When `challengeId` is paired with a
+   * non-challenge external type.
+   */
+  private assertChallengeAliasMatchesType(
+    input: { challengeId?: string },
+    reference: BudgetEntryReference,
+  ): void {
+    if (input.challengeId?.trim() && reference.externalType !== "CHALLENGE") {
+      throw new BadRequestException(
+        "challengeId can only be used with CHALLENGE externalType",
+      );
+    }
+  }
+
+  /**
+   * Quantizes a request amount to the billing ledger scale.
+   *
+   * The database stores budget ledger amounts as `Decimal(20,4)`, so budget
+   * comparisons and persisted consume/lock rows must use the same four-decimal
+   * representation.
+   *
+   * @param amount Request amount supplied by the caller.
+   * @param operation Name of the budget mutation operation for error messages.
+   * @returns Decimal value rounded to four fractional digits.
+   * @throws BadRequestException When the amount is missing or non-finite.
+   */
+  private toLedgerBudgetAmount(
+    amount: number,
+    operation: "lock" | "consume",
+  ): Prisma.Decimal {
+    if (typeof amount !== "number" || !Number.isFinite(amount)) {
+      throw new BadRequestException(
+        `${operation} amount must be a finite number`,
+      );
+    }
+
+    return new Prisma.Decimal(amount).toDecimalPlaces(
+      BUDGET_AMOUNT_DECIMAL_PLACES,
+      Prisma.Decimal.ROUND_HALF_UP,
+    );
+  }
+
+  /**
+   * Rejects negative budget mutation amounts after ledger-scale quantization.
+   *
+   * @param amount Requested lock or consume amount.
+   * @param operation Name of the budget mutation operation for error messages.
+   * @throws BadRequestException When the amount is negative.
+   */
+  private assertBudgetAmountIsNonNegative(
+    amount: Prisma.Decimal,
+    operation: "lock" | "consume",
+  ): void {
+    if (amount.lessThan(0)) {
+      throw new BadRequestException(
+        `${operation} amount must be a non-negative number`,
+      );
+    }
+  }
+
+  /**
+   * Rejects non-positive consume amounts.
+   *
+   * Consume requests do not treat zero as an unlock or no-op; zero-value
+   * unlocks are handled only by `lockAmount`.
+   *
+   * @param amount Requested consume amount after ledger-scale quantization.
+   * @param operation Name of the budget mutation operation for error messages.
+   * @throws BadRequestException When the amount is negative or zero.
+   */
+  private assertBudgetAmountIsPositive(
+    amount: Prisma.Decimal,
+    operation: "consume",
+  ): void {
+    this.assertBudgetAmountIsNonNegative(amount, operation);
+
+    if (amount.isZero()) {
+      throw new BadRequestException("consume amount must be greater than 0");
+    }
+  }
+
+  /**
+   * Locks the billing-account row and loads current budget totals.
+   *
+   * The row lock serializes budget writes for the same billing account inside
+   * the caller's transaction.
+   *
+   * @param tx Active Prisma transaction client.
+   * @param billingAccountId Billing account identifier.
+   * @returns Budget and aggregate locked/consumed totals.
+   * @throws NotFoundException When the billing account does not exist.
+   */
+  private async loadBudgetAccountTotals(
+    tx: Prisma.TransactionClient,
+    billingAccountId: number,
+  ): Promise<BudgetAccountTotals> {
+    const [billingAccount] = await tx.$queryRaw<BillingAccountBudgetLockRow[]>(
+      Prisma.sql`
+        SELECT "budget"
+        FROM "BillingAccount"
+        WHERE "id" = ${billingAccountId}
+        FOR UPDATE
+      `,
+    );
+
+    if (!billingAccount) {
+      throw new NotFoundException(
+        `Billing account with ID ${billingAccountId} not found`,
+      );
+    }
+
+    const [lockedAggregate, consumedAggregate] = await Promise.all([
+      tx.lockedAmount.aggregate({
+        where: { billingAccountId },
+        _sum: { amount: true },
+      }),
+      tx.consumedAmount.aggregate({
+        where: { billingAccountId },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    return {
+      budget: billingAccount.budget,
+      lockedTotal: new Prisma.Decimal(lockedAggregate._sum.amount ?? 0),
+      consumedTotal: new Prisma.Decimal(consumedAggregate._sum.amount ?? 0),
+    };
+  }
+
+  /**
+   * Loads current budget totals plus matching lock/consume rows for a reference.
+   *
+   * @param tx Active Prisma transaction client.
+   * @param billingAccountId Billing account identifier.
+   * @param reference Canonical typed external reference being mutated.
+   * @returns Budget totals and matching line items.
+   * @throws NotFoundException When the billing account does not exist.
+   */
+  private async loadBudgetMutationContext(
+    tx: Prisma.TransactionClient,
+    billingAccountId: number,
+    reference: BudgetEntryReference,
+  ): Promise<BudgetMutationContext> {
+    const totals = await this.loadBudgetAccountTotals(tx, billingAccountId);
+    const [matchingLock, matchingConsumed] = await Promise.all([
+      tx.lockedAmount.findFirst({
+        where: { billingAccountId, ...reference },
+      }),
+      tx.consumedAmount.findFirst({
+        where: { billingAccountId, ...reference },
+      }),
+    ]);
+
+    return {
+      ...totals,
+      matchingLock,
+      matchingConsumed,
+    };
+  }
+
+  /**
+   * Rejects a budget mutation when its post-operation reserved total exceeds
+   * the billing-account budget.
+   *
+   * @param budget Billing-account budget.
+   * @param reservedTotal Locked plus consumed total after the pending mutation.
+   * @throws BadRequestException When there are insufficient remaining funds.
+   */
+  private assertBudgetCanReserve(
+    budget: Prisma.Decimal,
+    reservedTotal: Prisma.Decimal,
+  ): void {
+    if (reservedTotal.greaterThan(budget)) {
+      throw new BadRequestException(
+        "Insufficient remaining funds on billing account",
+      );
+    }
+  }
+
+  /**
+   * Converts a persisted budget row into an external reference lookup input.
+   *
+   * @param lineItem Locked or consumed budget row.
+   * @returns Typed external reference for name resolution.
+   */
+  private toBudgetEntryReference(lineItem: BudgetAmountLineItem) {
+    return {
+      externalId: lineItem.externalId,
+      externalType: lineItem.externalType,
+    };
+  }
+
+  /**
+   * Shapes a budget row for API details responses.
+   *
+   * The legacy `challengeId` alias is retained only for challenge rows while
+   * `amount`, `date`, `externalId`, `externalType`, and `externalName` are the
+   * canonical line-item response fields.
+   *
+   * @param lineItem Locked or consumed budget row.
+   * @param externalNames Resolved names keyed by typed external reference.
+   * @returns API-ready line item with normalized date and resolved name.
+   */
+  private serializeBudgetLineItem(
+    lineItem: BudgetAmountLineItem,
+    externalNames: Map<string, string>,
+  ) {
+    const reference = this.toBudgetEntryReference(lineItem);
+    const serializedLineItem = {
+      amount: lineItem.amount,
+      date: lineItem.updatedAt,
+      externalId: lineItem.externalId,
+      externalType: lineItem.externalType,
+      externalName:
+        externalNames.get(getBudgetEntryReferenceKey(reference)) ?? null,
+    };
+
+    return lineItem.externalType === "CHALLENGE"
+      ? { ...serializedLineItem, challengeId: lineItem.externalId }
+      : serializedLineItem;
   }
 
   /**
