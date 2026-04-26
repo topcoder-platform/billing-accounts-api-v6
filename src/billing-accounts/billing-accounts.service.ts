@@ -113,6 +113,23 @@ interface ProjectAccessFilteredLineItems {
   consumedAmounts: BudgetAmountLineItem[];
 }
 
+export interface BudgetLineItemResponse {
+  amount: Prisma.Decimal;
+  date: Date;
+  externalId: string;
+  externalType: BudgetEntryExternalTypeValue;
+  externalName: string | null;
+  challengeId?: string;
+  memberPaymentAmount?: number;
+}
+
+export interface BillingAccountAuthResponse {
+  markup?: unknown;
+  totalBudgetRemaining?: unknown;
+  lockedAmounts?: BudgetLineItemResponse[];
+  consumedAmounts?: BudgetLineItemResponse[];
+}
+
 /**
  * Normalizes authenticated caller roles for case-insensitive comparisons.
  *
@@ -464,9 +481,11 @@ export class BillingAccountsService {
    * `userId`. Missing access is surfaced as not found to avoid leaking account
    * existence. Locked and consumed line items expose `amount`, `date`,
    * `externalId`, `externalType`, and `externalName`; challenge rows also expose
-   * the deprecated `challengeId` compatibility alias. Copilot, Project Manager,
-   * and Talent Manager callers only receive line items for projects they belong
-   * to; unresolved project access hides the line item.
+   * the deprecated `challengeId` compatibility alias. Copilot-only callers also
+   * receive `memberPaymentAmount` on each line item so the UI can show the
+   * payment value without exposing markup. Copilot, Project Manager, and Talent
+   * Manager callers only receive line items for projects they belong to;
+   * unresolved project access hides the line item.
    *
    * @param billingAccountId Billing-account identifier.
    * @param authUser Authenticated caller context from `req.authUser`.
@@ -1142,7 +1161,7 @@ export class BillingAccountsService {
   private serializeBudgetLineItem(
     lineItem: BudgetAmountLineItem,
     externalNames: Map<string, string>,
-  ) {
+  ): BudgetLineItemResponse {
     const reference = this.toBudgetEntryReference(lineItem);
     const serializedLineItem = {
       amount: lineItem.amount,
@@ -1159,24 +1178,24 @@ export class BillingAccountsService {
   }
 
   /**
-   * Calculates the copilot-safe member-payment capacity for a billing account.
+   * Calculates a copilot-safe member-payment amount from a billing ledger amount.
    *
-   * This mirrors the Work app's existing calculation while keeping the raw
-   * billing markup on the server. A zero markup means the full remaining budget
-   * is available for member payments.
+   * Billing locked and consumed rows store the member payment plus its markup
+   * fee. This reverses that ledger amount while keeping the raw billing markup
+   * on the server. A zero markup means the full amount is a member payment.
    *
-   * @param totalBudgetRemaining Remaining billing-account budget.
+   * @param billingAccountAmount Billing ledger amount that includes markup.
    * @param markup Billing-account markup from persistence.
-   * @returns Rounded member-payment capacity, or `undefined` when inputs are invalid.
+   * @returns Rounded member-payment amount, or `undefined` when inputs are invalid.
    */
-  private calculateMemberPaymentsRemaining(
-    totalBudgetRemaining: unknown,
+  private calculateMemberPaymentAmount(
+    billingAccountAmount: unknown,
     markup: unknown,
   ): number | undefined {
-    const remaining = Number(totalBudgetRemaining);
+    const amount = Number(billingAccountAmount);
     const rawMarkup = Number(markup);
 
-    if (!Number.isFinite(remaining) || !Number.isFinite(rawMarkup)) {
+    if (!Number.isFinite(amount) || !Number.isFinite(rawMarkup)) {
       return undefined;
     }
 
@@ -1187,21 +1206,65 @@ export class BillingAccountsService {
     }
 
     if (normalizedMarkup === 0) {
-      return Number(remaining.toFixed(2));
+      return Number(amount.toFixed(2));
     }
 
-    return Number((remaining / (1 / normalizedMarkup)).toFixed(2));
+    return Number((amount / (1 + normalizedMarkup)).toFixed(2));
   }
 
   /**
-   * Removes raw markup from copilot responses and adds a derived safe budget field.
+   * Calculates the copilot-safe member-payment capacity for a billing account.
+   *
+   * @param totalBudgetRemaining Remaining billing-account budget including markup capacity.
+   * @param markup Billing-account markup from persistence.
+   * @returns Rounded member-payment capacity, or `undefined` when inputs are invalid.
+   */
+  private calculateMemberPaymentsRemaining(
+    totalBudgetRemaining: unknown,
+    markup: unknown,
+  ): number | undefined {
+    return this.calculateMemberPaymentAmount(totalBudgetRemaining, markup);
+  }
+
+  /**
+   * Adds copilot-safe member-payment display amounts to budget line items.
+   *
+   * @param lineItems Serialized locked or consumed line items.
+   * @param markup Billing-account markup from persistence.
+   * @returns Line items with `memberPaymentAmount` when it can be calculated.
+   */
+  private serializeLineItemsForCopilot(
+    lineItems: BudgetLineItemResponse[] | undefined,
+    markup: unknown,
+  ): BudgetLineItemResponse[] | undefined {
+    if (!lineItems) {
+      return undefined;
+    }
+
+    return lineItems.map((lineItem) => {
+      const memberPaymentAmount = this.calculateMemberPaymentAmount(
+        lineItem.amount,
+        markup,
+      );
+
+      return memberPaymentAmount === undefined
+        ? lineItem
+        : {
+            ...lineItem,
+            memberPaymentAmount,
+          };
+    });
+  }
+
+  /**
+   * Removes raw markup from copilot responses and adds derived safe budget fields.
    *
    * @param billingAccount Billing-account response object after budget totals are available.
    * @param authUser Authenticated caller context from `req.authUser`.
    * @returns The original response for privileged callers, or a copilot-safe copy.
    */
   private serializeBillingAccountForAuthUser<
-    T extends { markup?: unknown; totalBudgetRemaining?: unknown },
+    T extends BillingAccountAuthResponse,
   >(billingAccount: T, authUser?: BillingAccountsAuthUser) {
     if (!shouldHideMarkupForCopilot(authUser)) {
       return billingAccount;
@@ -1212,11 +1275,30 @@ export class BillingAccountsService {
       billingAccount.totalBudgetRemaining,
       markup,
     );
+    const copilotBillingAccount = {
+      ...sanitizedBillingAccount,
+      ...(sanitizedBillingAccount.lockedAmounts
+        ? {
+            lockedAmounts: this.serializeLineItemsForCopilot(
+              sanitizedBillingAccount.lockedAmounts,
+              markup,
+            ),
+          }
+        : {}),
+      ...(sanitizedBillingAccount.consumedAmounts
+        ? {
+            consumedAmounts: this.serializeLineItemsForCopilot(
+              sanitizedBillingAccount.consumedAmounts,
+              markup,
+            ),
+          }
+        : {}),
+    };
 
     return memberPaymentsRemaining === undefined
-      ? sanitizedBillingAccount
+      ? copilotBillingAccount
       : {
-          ...sanitizedBillingAccount,
+          ...copilotBillingAccount,
           memberPaymentsRemaining,
         };
   }
