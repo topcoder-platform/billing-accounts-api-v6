@@ -63,6 +63,14 @@ const PROJECT_ACCESS_FILTERED_LINE_ITEM_ROLES = [
   TOPCODER_TALENT_MANAGER_ROLE,
 ];
 
+const BILLING_ACCOUNT_MARKUP_VISIBLE_ROLES = [
+  ADMIN_ROLE,
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+];
+
 const BUDGET_AMOUNT_DECIMAL_PLACES = 4;
 
 interface BudgetAmountLineItem {
@@ -230,6 +238,31 @@ function resolveProjectAccessFilteredLineItemUserId(
   return getNormalizedAuthUserId(authUser) ?? null;
 }
 
+/**
+ * Returns whether the caller should receive copilot-safe billing-account data.
+ *
+ * Copilots must not receive the raw billing-account markup. Manager, Talent
+ * Manager, and administrator roles retain the existing billing-account detail
+ * response shape even when a token also carries the copilot role.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns `true` when markup should be removed from billing-account responses.
+ */
+function shouldHideMarkupForCopilot(
+  authUser?: BillingAccountsAuthUser,
+): boolean {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+  const hasCopilotRole = normalizedRoles.includes(COPILOT_ROLE.toLowerCase());
+
+  if (!hasCopilotRole) {
+    return false;
+  }
+
+  return !BILLING_ACCOUNT_MARKUP_VISIBLE_ROLES.some((role) =>
+    normalizedRoles.includes(role.toLowerCase()),
+  );
+}
+
 @Injectable()
 export class BillingAccountsService {
   constructor(
@@ -392,7 +425,9 @@ export class BillingAccountsService {
       perPage,
       total,
       totalPages: Math.ceil(total / perPage),
-      data,
+      data: data.map((billingAccount) =>
+        this.serializeBillingAccountForAuthUser(billingAccount, authUser),
+      ),
     };
   }
 
@@ -499,7 +534,7 @@ export class BillingAccountsService {
       ],
     );
 
-    return {
+    const response = {
       ...ba,
       lockedAmounts: lockedAmounts.map((lineItem) =>
         this.serializeBudgetLineItem(lineItem, externalNames),
@@ -511,6 +546,8 @@ export class BillingAccountsService {
       consumedBudget: consumed,
       totalBudgetRemaining: remaining,
     };
+
+    return this.serializeBillingAccountForAuthUser(response, authUser);
   }
 
   async update(billingAccountId: number, dto: UpdateBillingAccountDto) {
@@ -1119,6 +1156,69 @@ export class BillingAccountsService {
     return lineItem.externalType === "CHALLENGE"
       ? { ...serializedLineItem, challengeId: lineItem.externalId }
       : serializedLineItem;
+  }
+
+  /**
+   * Calculates the copilot-safe member-payment capacity for a billing account.
+   *
+   * This mirrors the Work app's existing calculation while keeping the raw
+   * billing markup on the server. A zero markup means the full remaining budget
+   * is available for member payments.
+   *
+   * @param totalBudgetRemaining Remaining billing-account budget.
+   * @param markup Billing-account markup from persistence.
+   * @returns Rounded member-payment capacity, or `undefined` when inputs are invalid.
+   */
+  private calculateMemberPaymentsRemaining(
+    totalBudgetRemaining: unknown,
+    markup: unknown,
+  ): number | undefined {
+    const remaining = Number(totalBudgetRemaining);
+    const rawMarkup = Number(markup);
+
+    if (!Number.isFinite(remaining) || !Number.isFinite(rawMarkup)) {
+      return undefined;
+    }
+
+    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
+
+    if (normalizedMarkup < 0) {
+      return undefined;
+    }
+
+    if (normalizedMarkup === 0) {
+      return Number(remaining.toFixed(2));
+    }
+
+    return Number((remaining / (1 / normalizedMarkup)).toFixed(2));
+  }
+
+  /**
+   * Removes raw markup from copilot responses and adds a derived safe budget field.
+   *
+   * @param billingAccount Billing-account response object after budget totals are available.
+   * @param authUser Authenticated caller context from `req.authUser`.
+   * @returns The original response for privileged callers, or a copilot-safe copy.
+   */
+  private serializeBillingAccountForAuthUser<
+    T extends { markup?: unknown; totalBudgetRemaining?: unknown },
+  >(billingAccount: T, authUser?: BillingAccountsAuthUser) {
+    if (!shouldHideMarkupForCopilot(authUser)) {
+      return billingAccount;
+    }
+
+    const { markup, ...sanitizedBillingAccount } = billingAccount;
+    const memberPaymentsRemaining = this.calculateMemberPaymentsRemaining(
+      billingAccount.totalBudgetRemaining,
+      markup,
+    );
+
+    return memberPaymentsRemaining === undefined
+      ? sanitizedBillingAccount
+      : {
+          ...sanitizedBillingAccount,
+          memberPaymentsRemaining,
+        };
   }
 
   /**

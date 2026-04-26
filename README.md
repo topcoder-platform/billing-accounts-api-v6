@@ -7,7 +7,7 @@
 - Endpoints:
   - `GET /billing-accounts` 
   - `POST /billing-accounts` 
-  - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals; line items expose `amount`, `date`, `externalId`, `externalType`, `externalName`, and `challengeId` only for challenge compatibility; copilot, Project Manager, and Talent Manager callers only receive line items for projects they belong to)
+  - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals; line items expose `amount`, `date`, `externalId`, `externalType`, `externalName`, and `challengeId` only for challenge compatibility; copilot, Project Manager, and Talent Manager callers only receive line items for projects they belong to; copilot-only callers receive `memberPaymentsRemaining` instead of raw `markup`)
   - `GET /billing-accounts/users/:userId` (list billing accounts accessible by the given Topcoder user ID — resolved via Salesforce resource object)
   - `PATCH /billing-accounts/:billingAccountId`
   - `PATCH /billing-accounts/:billingAccountId/lock-amount` (challenge-only typed reference; non-negative amount; 0 amount = unlock; rejects insufficient remaining funds)
@@ -29,7 +29,9 @@
   also continue to allow `copilot`, `Project Manager`, and `Topcoder Project Manager`.
   Project Managers are restricted to billing accounts granted to their own
   user id on `GET /billing-accounts` and `GET /billing-accounts/:billingAccountId`.
-  On billing-account detail responses, copilot, Project Manager, and Talent
+  Copilot-only callers receive billing-account responses with `markup` omitted
+  and `memberPaymentsRemaining` derived server-side. On billing-account detail
+  responses, copilot, Project Manager, and Talent
   Manager callers only receive locked/consumed line items whose challenge or
   engagement project maps to an active `project_members` row for their user id.
   Line items with unresolved project access are omitted for those callers.
