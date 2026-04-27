@@ -30,7 +30,8 @@
   Project Managers are restricted to billing accounts granted to their own
   user id on `GET /billing-accounts` and `GET /billing-accounts/:billingAccountId`.
   Copilot-only callers receive billing-account responses with `markup` omitted
-  and `memberPaymentsRemaining` derived server-side. Billing-account detail
+  and `memberPaymentsRemaining` derived server-side as total remaining minus
+  the total remaining markup amount. Billing-account detail
   responses for copilots also include per-line-item `memberPaymentAmount` values
   that remove the markup fee from locked and consumed amounts. On detail
   responses, copilot, Project Manager, and Talent

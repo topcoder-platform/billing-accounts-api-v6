@@ -1215,7 +1215,10 @@ export class BillingAccountsService {
   /**
    * Calculates the copilot-safe member-payment capacity for a billing account.
    *
-   * @param totalBudgetRemaining Remaining billing-account budget including markup capacity.
+   * Remaining capacity applies the markup as a direct reduction from the
+   * current remaining budget: total remaining - (total remaining * markup).
+   *
+   * @param totalBudgetRemaining Current remaining billing-account budget.
    * @param markup Billing-account markup from persistence.
    * @returns Rounded member-payment capacity, or `undefined` when inputs are invalid.
    */
@@ -1223,7 +1226,22 @@ export class BillingAccountsService {
     totalBudgetRemaining: unknown,
     markup: unknown,
   ): number | undefined {
-    return this.calculateMemberPaymentAmount(totalBudgetRemaining, markup);
+    const totalRemaining = Number(totalBudgetRemaining);
+    const rawMarkup = Number(markup);
+
+    if (!Number.isFinite(totalRemaining) || !Number.isFinite(rawMarkup)) {
+      return undefined;
+    }
+
+    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
+
+    if (normalizedMarkup < 0) {
+      return undefined;
+    }
+
+    return Number(
+      (totalRemaining - totalRemaining * normalizedMarkup).toFixed(2),
+    );
   }
 
   /**
