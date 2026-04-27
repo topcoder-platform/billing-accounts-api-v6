@@ -28,7 +28,9 @@
   and `Topcoder Talent Manager` JWT roles; read-only billing-account lookups
   also continue to allow `copilot`, `Project Manager`, and `Topcoder Project Manager`.
   Project Managers are restricted to billing accounts granted to their own
-  user id on `GET /billing-accounts` and `GET /billing-accounts/:billingAccountId`.
+  user id on `GET /billing-accounts`. On `GET /billing-accounts/:billingAccountId`,
+  they can read billing accounts granted to their own user id or assigned to
+  projects they belong to.
   Copilot-only callers receive billing-account responses with `markup` omitted
   and `memberPaymentsRemaining` derived server-side as total remaining minus
   the total remaining markup amount. Billing-account detail

@@ -187,8 +187,8 @@ function getNormalizedAuthUserId(
 }
 
 /**
- * Returns the enforced access-grant user id for restricted Project Manager
- * billing-account reads.
+ * Returns the enforced user id for restricted Project Manager billing-account
+ * reads.
  *
  * `undefined` means the caller keeps unrestricted read behavior. `null`
  * indicates a restricted Project Manager caller without a usable `userId`,
@@ -477,14 +477,15 @@ export class BillingAccountsService {
    * Fetches a single billing account, its normalized budget line items, and
    * budget aggregates.
    *
-   * Project Manager callers can read only billing accounts granted to their own
-   * `userId`. Missing access is surfaced as not found to avoid leaking account
-   * existence. Locked and consumed line items expose `amount`, `date`,
-   * `externalId`, `externalType`, and `externalName`; challenge rows also expose
-   * the deprecated `challengeId` compatibility alias. Copilot-only callers also
+   * Project Manager callers can read billing accounts granted to their own
+   * `userId`, or billing accounts assigned to a project they belong to. Missing
+   * access is surfaced as not found to avoid leaking account existence. Locked
+   * and consumed line items expose `amount`, `date`, `externalId`,
+   * `externalType`, and `externalName`; challenge rows also expose the
+   * deprecated `challengeId` compatibility alias. Copilot-only callers also
    * receive `memberPaymentAmount` on each line item so the UI can show the
-   * payment value without exposing markup. Copilot, Project Manager, and Talent
-   * Manager callers only receive line items for projects they belong to;
+   * payment value without exposing markup. Copilot, Project Manager, and
+   * Talent Manager callers only receive line items for projects they belong to;
    * unresolved project access hides the line item.
    *
    * @param billingAccountId Billing-account identifier.
@@ -502,7 +503,7 @@ export class BillingAccountsService {
       lockedAmounts: true,
       consumedAmounts: true,
     };
-    const ba =
+    let ba =
       restrictedProjectManagerUserId === undefined
         ? await this.prisma.billingAccount.findUnique({
             where: { id: billingAccountId },
@@ -519,6 +520,21 @@ export class BillingAccountsService {
               },
               include,
             });
+
+    if (!ba && restrictedProjectManagerUserId) {
+      const hasProjectBillingAccountAccess =
+        await this.externalBudgetEntryLookup.hasProjectBillingAccountAccess(
+          billingAccountId,
+          restrictedProjectManagerUserId,
+        );
+
+      if (hasProjectBillingAccountAccess) {
+        ba = await this.prisma.billingAccount.findUnique({
+          where: { id: billingAccountId },
+          include,
+        });
+      }
+    }
 
     if (!ba)
       throw new NotFoundException(

@@ -32,6 +32,10 @@ interface ProjectAccessRow {
   projectId: string;
 }
 
+interface ProjectBillingAccountAccessRow {
+  hasAccess: boolean;
+}
+
 /**
  * Resolves budget-entry external metadata from service-owned persistence stores.
  *
@@ -184,6 +188,63 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
     }
 
     return accessibleReferenceKeys;
+  }
+
+  /**
+   * Checks whether a user belongs to a project using a billing account.
+   *
+   * Project Managers may open billing-account details from Work project pages
+   * even when the legacy billing-account resource grant was not imported for
+   * that account. This lookup validates access against non-deleted projects
+   * and non-deleted project membership in projects-api-v6.
+   *
+   * @param billingAccountId Topcoder billing-account id from the detail route.
+   * @param userId Topcoder user id from the authenticated caller.
+   * @returns `true` when the user has non-deleted project membership for a
+   * project assigned to the billing account; otherwise `false`.
+   */
+  async hasProjectBillingAccountAccess(
+    billingAccountId: number,
+    userId: string,
+  ): Promise<boolean> {
+    const normalizedBillingAccountId =
+      this.normalizeNumericTextId(billingAccountId);
+    const normalizedUserId = this.normalizeNumericTextId(userId);
+
+    if (!normalizedBillingAccountId || !normalizedUserId) {
+      return false;
+    }
+
+    const client = this.getProjectsClient();
+
+    if (!client) {
+      return false;
+    }
+
+    try {
+      const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
+        Prisma.sql`
+          SELECT true AS "hasAccess"
+          FROM projects project
+          INNER JOIN project_members project_member
+            ON project_member."projectId" = project."id"
+          WHERE project."billingAccountId" = ${BigInt(
+            normalizedBillingAccountId,
+          )}
+            AND project."deletedAt" IS NULL
+            AND project_member."userId" = ${BigInt(normalizedUserId)}
+            AND project_member."deletedAt" IS NULL
+          LIMIT 1
+        `,
+      );
+
+      return rows.some((row) => row.hasAccess);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to resolve project billing-account access: ${this.getErrorMessage(error)}`,
+      );
+      return false;
+    }
   }
 
   /**
@@ -555,7 +616,7 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
     this.projectsClient = this.createOptionalClient(
       process.env.PROJECTS_DB_URL || process.env.PROJECT_DB_URL,
       "PROJECTS_DB_URL or PROJECT_DB_URL",
-      "project-access filtering will hide line items whose access cannot be resolved.",
+      "project-access checks will hide line items and deny project-based billing-account access when access cannot be resolved.",
     );
 
     return this.projectsClient;
