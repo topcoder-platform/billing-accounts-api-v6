@@ -7,7 +7,7 @@
 - Endpoints:
   - `GET /billing-accounts` 
   - `POST /billing-accounts` 
-  - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals; line items expose `amount`, `date`, `externalId`, `externalType`, `externalName`, and `challengeId` only for challenge compatibility; copilot, Project Manager, and Talent Manager callers only receive line items for projects they belong to; copilot-only callers receive `memberPaymentsRemaining` and per-line-item `memberPaymentAmount` instead of raw `markup`)
+  - `GET /billing-accounts/:billingAccountId` (includes locked/consumed arrays + budget totals; line items expose `amount`, `date`, `externalId`, `externalType`, `externalName`, and `challengeId` only for challenge compatibility; copilot, project-scoped, and Talent Manager callers only receive line items for projects they belong to; copilot-only callers receive `memberPaymentsRemaining` and per-line-item `memberPaymentAmount` instead of raw `markup`)
   - `GET /billing-accounts/users/:userId` (list billing accounts accessible by the given Topcoder user ID — resolved via Salesforce resource object)
   - `PATCH /billing-accounts/:billingAccountId`
   - `PATCH /billing-accounts/:billingAccountId/lock-amount` (challenge-only typed reference; non-negative amount; 0 amount = unlock; rejects insufficient remaining funds)
@@ -27,16 +27,19 @@
 - Billing-account management endpoints accept `administrator`, `Talent Manager`,
   and `Topcoder Talent Manager` JWT roles; read-only billing-account lookups
   also continue to allow `copilot`, `Project Manager`, and `Topcoder Project Manager`.
-  Project Managers are restricted to billing accounts granted to their own
-  user id on `GET /billing-accounts`. On `GET /billing-accounts/:billingAccountId`,
-  they can read billing accounts granted to their own user id or assigned to
-  projects they belong to.
+  The detail endpoint additionally accepts `Topcoder User` so project-member
+  callers from Work can be authorized by project membership.
+  Project-scoped billing-account readers are restricted to billing accounts
+  granted to their own user id on `GET /billing-accounts`. On
+  `GET /billing-accounts/:billingAccountId`, they can read billing accounts
+  granted to their own user id or assigned to active projects where they hold
+  a management or copilot project role.
   Copilot-only callers receive billing-account responses with `markup` omitted
   and `memberPaymentsRemaining` derived server-side as total remaining minus
   the total remaining markup amount. Billing-account detail
   responses for copilots also include per-line-item `memberPaymentAmount` values
   that remove the markup fee from locked and consumed amounts. On detail
-  responses, copilot, Project Manager, and Talent
+  responses, copilot, project-scoped, and Talent
   Manager callers only receive locked/consumed line items whose challenge or
   engagement project maps to an active `project_members` row for their user id.
   Line items with unresolved project access are omitted for those callers.
