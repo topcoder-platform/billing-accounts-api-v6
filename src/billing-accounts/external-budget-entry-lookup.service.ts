@@ -37,6 +37,7 @@ interface ProjectBillingAccountAccessRow {
 }
 
 interface ProjectBillingAccountAccessOptions {
+  allowAnyAssignedProject?: boolean;
   requireAllowedProjectRole?: boolean;
 }
 
@@ -210,32 +211,52 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
    * Project-scoped Work users may open billing-account details from project
    * pages even when the legacy billing-account resource grant was not imported
    * for that account. This lookup validates access against non-deleted
-   * projects and non-deleted project membership in projects-api-v6. Callers
-   * without a billing-account Topcoder role can require the membership to be a
-   * management/copilot project role.
+   * projects in projects-api-v6. Global billing-account Topcoder roles can
+   * allow any non-deleted project assigned to the account, while plain project
+   * members require non-deleted membership. Callers without a billing-account
+   * Topcoder role can require the membership to be a management/copilot
+   * project role.
    *
    * @param billingAccountId Topcoder billing-account id from the detail route.
-   * @param userId Topcoder user id from the authenticated caller.
+   * @param userId Topcoder user id from the authenticated caller; optional
+   * when global role access allows any assigned project.
    * @param options Access options for project-role enforcement.
    * @returns `true` when the user has non-deleted project membership for a
-   * project assigned to the billing account; otherwise `false`.
+   * project assigned to the billing account, or when any assigned project is
+   * allowed and exists; otherwise `false`.
    */
   async hasProjectBillingAccountAccess(
     billingAccountId: number,
-    userId: string,
+    userId?: string,
     options: ProjectBillingAccountAccessOptions = {},
   ): Promise<boolean> {
     const normalizedBillingAccountId =
       this.normalizeNumericTextId(billingAccountId);
     const normalizedUserId = this.normalizeNumericTextId(userId);
+    const allowAnyAssignedProject = options.allowAnyAssignedProject === true;
 
-    if (!normalizedBillingAccountId || !normalizedUserId) {
+    if (
+      !normalizedBillingAccountId ||
+      (!allowAnyAssignedProject && !normalizedUserId)
+    ) {
       return false;
     }
 
     const client = this.getProjectsClient();
 
     if (!client) {
+      return false;
+    }
+
+    if (allowAnyAssignedProject) {
+      return this.hasBillingAccountAssignedProject(
+        client,
+        normalizedBillingAccountId,
+      );
+    }
+
+    const membershipUserId = normalizedUserId;
+    if (!membershipUserId) {
       return false;
     }
 
@@ -257,7 +278,7 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
             normalizedBillingAccountId,
           )}
             AND project."deletedAt" IS NULL
-            AND project_member."userId" = ${BigInt(normalizedUserId)}
+            AND project_member."userId" = ${BigInt(membershipUserId)}
             ${projectRoleFilter}
             AND project_member."deletedAt" IS NULL
           LIMIT 1
@@ -268,6 +289,37 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
     } catch (error) {
       this.logger.warn(
         `Failed to resolve project billing-account access: ${this.getErrorMessage(error)}`,
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Checks whether a billing account is assigned to any non-deleted project.
+   *
+   * @param client Projects API Prisma client.
+   * @param billingAccountId Normalized numeric billing-account id.
+   * @returns `true` when at least one non-deleted project uses the account.
+   */
+  private async hasBillingAccountAssignedProject(
+    client: PrismaClient,
+    billingAccountId: string,
+  ): Promise<boolean> {
+    try {
+      const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
+        Prisma.sql`
+          SELECT true AS "hasAccess"
+          FROM projects project
+          WHERE project."billingAccountId" = ${BigInt(billingAccountId)}
+            AND project."deletedAt" IS NULL
+          LIMIT 1
+        `,
+      );
+
+      return rows.some((row) => row.hasAccess);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to resolve project billing-account assignment: ${this.getErrorMessage(error)}`,
       );
       return false;
     }

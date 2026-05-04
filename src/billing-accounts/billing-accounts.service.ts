@@ -229,14 +229,29 @@ function resolveProjectScopedBillingAccountReadUserId(
 }
 
 /**
+ * Returns whether the caller has a Topcoder role that can read project billing
+ * account details in Projects API.
+ *
+ * These global roles can read a project billing account when the account is
+ * assigned to a non-deleted project. Plain `Topcoder User` project members
+ * must keep the stricter project membership role check.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns `true` when the caller can use project-assigned billing-account access.
+ */
+function hasProjectBillingAccountTopcoderDetailRole(
+  authUser?: BillingAccountsAuthUser,
+): boolean {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+
+  return PROJECT_BILLING_ACCOUNT_TOPCODER_DETAIL_ROLES.some((role) =>
+    normalizedRoles.includes(role.toLowerCase()),
+  );
+}
+
+/**
  * Returns whether project fallback access should enforce a management/copilot
  * project member role.
- *
- * Global Project Manager tokens already satisfy Projects API billing-account
- * detail permission. They still need active membership on a project using the
- * billing account, but the specific project member role does not need to carry
- * the detail permission. Plain `Topcoder User` tokens must keep the stricter
- * project-role check.
  *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns `true` when the fallback must require an allowed project role.
@@ -244,11 +259,7 @@ function resolveProjectScopedBillingAccountReadUserId(
 function shouldRequireProjectBillingAccountRoleForFallback(
   authUser?: BillingAccountsAuthUser,
 ): boolean {
-  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
-
-  return !PROJECT_BILLING_ACCOUNT_TOPCODER_DETAIL_ROLES.some((role) =>
-    normalizedRoles.includes(role.toLowerCase()),
-  );
+  return !hasProjectBillingAccountTopcoderDetailRole(authUser);
 }
 
 /**
@@ -510,11 +521,11 @@ export class BillingAccountsService {
    * budget aggregates.
    *
    * Project-scoped callers can read billing accounts granted to their own
-   * `userId`, or billing accounts assigned to an active project they belong to.
-   * Plain `Topcoder User` callers need an allowed management/copilot project
-   * role for that project fallback, while global Project Manager callers only
-   * need active project membership. Missing access is surfaced as not found to
-   * avoid leaking account existence. Locked and consumed line items expose
+   * `userId`, or billing accounts assigned to a non-deleted project. Plain
+   * `Topcoder User` callers need an allowed management/copilot project role
+   * for that project fallback, while global Project Manager callers can use
+   * the project assignment directly. Missing access is surfaced as not found
+   * to avoid leaking account existence. Locked and consumed line items expose
    * `amount`, `date`, `externalId`, `externalType`, and `externalName`;
    * challenge rows also expose the deprecated `challengeId` compatibility
    * alias. Copilot-only callers also receive `memberPaymentAmount` on each
@@ -533,6 +544,8 @@ export class BillingAccountsService {
   async get(billingAccountId: number, authUser?: BillingAccountsAuthUser) {
     const projectScopedBillingAccountReadUserId =
       resolveProjectScopedBillingAccountReadUserId(authUser);
+    const hasTopcoderProjectBillingDetailRole =
+      hasProjectBillingAccountTopcoderDetailRole(authUser);
     const include = {
       client: true,
       lockedAmounts: true,
@@ -556,12 +569,17 @@ export class BillingAccountsService {
               include,
             });
 
-    if (!ba && projectScopedBillingAccountReadUserId) {
+    if (
+      !ba &&
+      (projectScopedBillingAccountReadUserId ||
+        hasTopcoderProjectBillingDetailRole)
+    ) {
       const hasProjectBillingAccountAccess =
         await this.externalBudgetEntryLookup.hasProjectBillingAccountAccess(
           billingAccountId,
-          projectScopedBillingAccountReadUserId,
+          projectScopedBillingAccountReadUserId ?? undefined,
           {
+            allowAnyAssignedProject: hasTopcoderProjectBillingDetailRole,
             requireAllowedProjectRole:
               shouldRequireProjectBillingAccountRoleForFallback(authUser),
           },
