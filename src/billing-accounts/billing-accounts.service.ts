@@ -29,6 +29,7 @@ import {
   PROJECT_MANAGER_ROLE,
   TALENT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
   TOPCODER_TALENT_MANAGER_ROLE,
 } from "../auth/constants";
 
@@ -50,7 +51,13 @@ const UNRESTRICTED_BILLING_ACCOUNT_READ_ROLES = [
   TOPCODER_TALENT_MANAGER_ROLE,
 ];
 
-const RESTRICTED_PROJECT_MANAGER_READ_ROLES = [
+const PROJECT_SCOPED_BILLING_ACCOUNT_READ_ROLES = [
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
+];
+
+const PROJECT_BILLING_ACCOUNT_TOPCODER_DETAIL_ROLES = [
   PROJECT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
 ];
@@ -59,6 +66,7 @@ const PROJECT_ACCESS_FILTERED_LINE_ITEM_ROLES = [
   COPILOT_ROLE,
   PROJECT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
   TALENT_MANAGER_ROLE,
   TOPCODER_TALENT_MANAGER_ROLE,
 ];
@@ -187,26 +195,25 @@ function getNormalizedAuthUserId(
 }
 
 /**
- * Returns the enforced user id for restricted Project Manager billing-account
- * reads.
+ * Returns the enforced user id for project-scoped billing-account reads.
  *
  * `undefined` means the caller keeps unrestricted read behavior. `null`
- * indicates a restricted Project Manager caller without a usable `userId`,
+ * indicates a restricted project-scoped caller without a usable `userId`,
  * which should be treated as no accessible accounts.
  *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns Enforced user id, `null`, or `undefined`.
  */
-function resolveRestrictedProjectManagerUserId(
+function resolveProjectScopedBillingAccountReadUserId(
   authUser?: BillingAccountsAuthUser,
 ): string | null | undefined {
   const normalizedRoles = getNormalizedAuthUserRoles(authUser);
-  const hasRestrictedProjectManagerRole =
-    RESTRICTED_PROJECT_MANAGER_READ_ROLES.some((role) =>
+  const hasProjectScopedBillingAccountReadRole =
+    PROJECT_SCOPED_BILLING_ACCOUNT_READ_ROLES.some((role) =>
       normalizedRoles.includes(role.toLowerCase()),
     );
 
-  if (!hasRestrictedProjectManagerRole) {
+  if (!hasProjectScopedBillingAccountReadRole) {
     return undefined;
   }
 
@@ -222,12 +229,35 @@ function resolveRestrictedProjectManagerUserId(
 }
 
 /**
+ * Returns whether project fallback access should enforce a management/copilot
+ * project member role.
+ *
+ * Global Project Manager tokens already satisfy Projects API billing-account
+ * detail permission. They still need active membership on a project using the
+ * billing account, but the specific project member role does not need to carry
+ * the detail permission. Plain `Topcoder User` tokens must keep the stricter
+ * project-role check.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns `true` when the fallback must require an allowed project role.
+ */
+function shouldRequireProjectBillingAccountRoleForFallback(
+  authUser?: BillingAccountsAuthUser,
+): boolean {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+
+  return !PROJECT_BILLING_ACCOUNT_TOPCODER_DETAIL_ROLES.some((role) =>
+    normalizedRoles.includes(role.toLowerCase()),
+  );
+}
+
+/**
  * Returns the user id to use for project-level line-item filtering.
  *
- * Administrators keep full line-item visibility. Copilots, Project Managers,
- * and Talent Managers only receive line items whose underlying challenge or
- * engagement project can be resolved to an active project membership for their
- * user id.
+ * Administrators keep full line-item visibility. Copilots, project-scoped
+ * billing-account readers, and Talent Managers only receive line items whose
+ * underlying challenge or engagement project can be resolved to an active
+ * project membership for their user id.
  *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns User id to filter by, `null` when missing, or `undefined` when no
@@ -313,7 +343,7 @@ export class BillingAccountsService {
   /**
    * Lists billing accounts with optional filtering, sorting, and pagination.
    *
-   * Project Manager callers are constrained to billing accounts granted to
+   * Project-scoped callers are constrained to billing accounts granted to
    * their own `userId`, regardless of an explicit `userId` query override.
    *
    * @param q Query filters and pagination controls.
@@ -335,10 +365,10 @@ export class BillingAccountsService {
       sortBy,
       sortOrder = "asc",
     } = q;
-    const restrictedProjectManagerUserId =
-      resolveRestrictedProjectManagerUserId(authUser);
+    const projectScopedBillingAccountReadUserId =
+      resolveProjectScopedBillingAccountReadUserId(authUser);
 
-    if (restrictedProjectManagerUserId === null) {
+    if (projectScopedBillingAccountReadUserId === null) {
       return {
         page,
         perPage,
@@ -353,8 +383,10 @@ export class BillingAccountsService {
       ...(status ? { status } : {}),
     };
 
-    if (restrictedProjectManagerUserId) {
-      where.accessGrants = { some: { userId: restrictedProjectManagerUserId } };
+    if (projectScopedBillingAccountReadUserId) {
+      where.accessGrants = {
+        some: { userId: projectScopedBillingAccountReadUserId },
+      };
     } else if (userId) {
       where.accessGrants = { some: { userId } };
     }
@@ -477,16 +509,19 @@ export class BillingAccountsService {
    * Fetches a single billing account, its normalized budget line items, and
    * budget aggregates.
    *
-   * Project Manager callers can read billing accounts granted to their own
-   * `userId`, or billing accounts assigned to a project they belong to. Missing
-   * access is surfaced as not found to avoid leaking account existence. Locked
-   * and consumed line items expose `amount`, `date`, `externalId`,
-   * `externalType`, and `externalName`; challenge rows also expose the
-   * deprecated `challengeId` compatibility alias. Copilot-only callers also
-   * receive `memberPaymentAmount` on each line item so the UI can show the
-   * payment value without exposing markup. Copilot, Project Manager, and
-   * Talent Manager callers only receive line items for projects they belong to;
-   * unresolved project access hides the line item.
+   * Project-scoped callers can read billing accounts granted to their own
+   * `userId`, or billing accounts assigned to an active project they belong to.
+   * Plain `Topcoder User` callers need an allowed management/copilot project
+   * role for that project fallback, while global Project Manager callers only
+   * need active project membership. Missing access is surfaced as not found to
+   * avoid leaking account existence. Locked and consumed line items expose
+   * `amount`, `date`, `externalId`, `externalType`, and `externalName`;
+   * challenge rows also expose the deprecated `challengeId` compatibility
+   * alias. Copilot-only callers also receive `memberPaymentAmount` on each
+   * line item so the UI can show the payment value without exposing markup.
+   * Copilot, project-scoped, and Talent Manager callers only receive line
+   * items for projects they belong to; unresolved project access hides the
+   * line item.
    *
    * @param billingAccountId Billing-account identifier.
    * @param authUser Authenticated caller context from `req.authUser`.
@@ -496,36 +531,40 @@ export class BillingAccountsService {
    * caller does not have access to it.
    */
   async get(billingAccountId: number, authUser?: BillingAccountsAuthUser) {
-    const restrictedProjectManagerUserId =
-      resolveRestrictedProjectManagerUserId(authUser);
+    const projectScopedBillingAccountReadUserId =
+      resolveProjectScopedBillingAccountReadUserId(authUser);
     const include = {
       client: true,
       lockedAmounts: true,
       consumedAmounts: true,
     };
     let ba =
-      restrictedProjectManagerUserId === undefined
+      projectScopedBillingAccountReadUserId === undefined
         ? await this.prisma.billingAccount.findUnique({
             where: { id: billingAccountId },
             include,
           })
-        : restrictedProjectManagerUserId === null
+        : projectScopedBillingAccountReadUserId === null
           ? null
           : await this.prisma.billingAccount.findFirst({
               where: {
                 id: billingAccountId,
                 accessGrants: {
-                  some: { userId: restrictedProjectManagerUserId },
+                  some: { userId: projectScopedBillingAccountReadUserId },
                 },
               },
               include,
             });
 
-    if (!ba && restrictedProjectManagerUserId) {
+    if (!ba && projectScopedBillingAccountReadUserId) {
       const hasProjectBillingAccountAccess =
         await this.externalBudgetEntryLookup.hasProjectBillingAccountAccess(
           billingAccountId,
-          restrictedProjectManagerUserId,
+          projectScopedBillingAccountReadUserId,
+          {
+            requireAllowedProjectRole:
+              shouldRequireProjectBillingAccountRoleForFallback(authUser),
+          },
         );
 
       if (hasProjectBillingAccountAccess) {

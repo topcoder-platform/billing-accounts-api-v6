@@ -36,6 +36,20 @@ interface ProjectBillingAccountAccessRow {
   hasAccess: boolean;
 }
 
+interface ProjectBillingAccountAccessOptions {
+  requireAllowedProjectRole?: boolean;
+}
+
+const PROJECT_BILLING_ACCOUNT_DETAIL_ROLES = [
+  "manager",
+  "account_manager",
+  "account_executive",
+  "project_manager",
+  "program_manager",
+  "solution_architect",
+  "copilot",
+];
+
 /**
  * Resolves budget-entry external metadata from service-owned persistence stores.
  *
@@ -193,19 +207,23 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
   /**
    * Checks whether a user belongs to a project using a billing account.
    *
-   * Project Managers may open billing-account details from Work project pages
-   * even when the legacy billing-account resource grant was not imported for
-   * that account. This lookup validates access against non-deleted projects
-   * and non-deleted project membership in projects-api-v6.
+   * Project-scoped Work users may open billing-account details from project
+   * pages even when the legacy billing-account resource grant was not imported
+   * for that account. This lookup validates access against non-deleted
+   * projects and non-deleted project membership in projects-api-v6. Callers
+   * without a billing-account Topcoder role can require the membership to be a
+   * management/copilot project role.
    *
    * @param billingAccountId Topcoder billing-account id from the detail route.
    * @param userId Topcoder user id from the authenticated caller.
+   * @param options Access options for project-role enforcement.
    * @returns `true` when the user has non-deleted project membership for a
    * project assigned to the billing account; otherwise `false`.
    */
   async hasProjectBillingAccountAccess(
     billingAccountId: number,
     userId: string,
+    options: ProjectBillingAccountAccessOptions = {},
   ): Promise<boolean> {
     const normalizedBillingAccountId =
       this.normalizeNumericTextId(billingAccountId);
@@ -221,6 +239,13 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
       return false;
     }
 
+    const projectRoleFilter =
+      options.requireAllowedProjectRole === false
+        ? Prisma.empty
+        : Prisma.sql`AND project_member."role"::text IN (${Prisma.join(
+            PROJECT_BILLING_ACCOUNT_DETAIL_ROLES,
+          )})`;
+
     try {
       const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
         Prisma.sql`
@@ -233,6 +258,7 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
           )}
             AND project."deletedAt" IS NULL
             AND project_member."userId" = ${BigInt(normalizedUserId)}
+            ${projectRoleFilter}
             AND project_member."deletedAt" IS NULL
           LIMIT 1
         `,
