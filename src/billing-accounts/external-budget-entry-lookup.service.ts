@@ -41,6 +41,12 @@ interface ProjectBillingAccountAccessOptions {
   requireAllowedProjectRole?: boolean;
 }
 
+interface ProjectLookupTarget {
+  label: string;
+  projectMembersTable: Prisma.Sql;
+  projectsTable: Prisma.Sql;
+}
+
 const PROJECT_BILLING_ACCOUNT_DETAIL_ROLES = [
   "manager",
   "account_manager",
@@ -51,6 +57,19 @@ const PROJECT_BILLING_ACCOUNT_DETAIL_ROLES = [
   "copilot",
 ];
 
+const PROJECT_LOOKUP_TARGETS: ProjectLookupTarget[] = [
+  {
+    label: "configured projects search path",
+    projectMembersTable: Prisma.sql`project_members`,
+    projectsTable: Prisma.sql`projects`,
+  },
+  {
+    label: "projects schema",
+    projectMembersTable: Prisma.sql`projects.project_members`,
+    projectsTable: Prisma.sql`projects.projects`,
+  },
+];
+
 /**
  * Resolves budget-entry external metadata from service-owned persistence stores.
  *
@@ -58,7 +77,9 @@ const PROJECT_BILLING_ACCOUNT_DETAIL_ROLES = [
  * not make one network/database call per line item. It resolves display names
  * for response rows and project access for role-filtered line-item visibility.
  * Missing DB URLs or missing referenced rows produce empty lookup mappings
- * rather than failing the billing account response.
+ * rather than failing the billing account response. Projects API lookups try
+ * both the configured connection search path and the explicit `projects`
+ * schema, because deployment URLs are not always schema-qualified.
  */
 @Injectable()
 export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
@@ -215,7 +236,8 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
    * allow any non-deleted project assigned to the account, while plain project
    * members require non-deleted membership. Callers without a billing-account
    * Topcoder role can require the membership to be a management/copilot
-   * project role.
+   * project role. The Projects DB table lookup is tolerant of URLs with or
+   * without a `schema=projects` search path.
    *
    * @param billingAccountId Topcoder billing-account id from the detail route.
    * @param userId Topcoder user id from the authenticated caller; optional
@@ -267,31 +289,44 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
             PROJECT_BILLING_ACCOUNT_DETAIL_ROLES,
           )})`;
 
-    try {
-      const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
-        Prisma.sql`
-          SELECT true AS "hasAccess"
-          FROM projects project
-          INNER JOIN project_members project_member
-            ON project_member."projectId" = project."id"
-          WHERE project."billingAccountId" = ${BigInt(
-            normalizedBillingAccountId,
-          )}
-            AND project."deletedAt" IS NULL
-            AND project_member."userId" = ${BigInt(membershipUserId)}
-            ${projectRoleFilter}
-            AND project_member."deletedAt" IS NULL
-          LIMIT 1
-        `,
-      );
+    const errors: string[] = [];
+    let successfulLookups = 0;
 
-      return rows.some((row) => row.hasAccess);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to resolve project billing-account access: ${this.getErrorMessage(error)}`,
-      );
-      return false;
+    for (const target of PROJECT_LOOKUP_TARGETS) {
+      try {
+        const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
+          Prisma.sql`
+            SELECT true AS "hasAccess"
+            FROM ${target.projectsTable} project
+            INNER JOIN ${target.projectMembersTable} project_member
+              ON project_member."projectId" = project."id"
+            WHERE project."billingAccountId" = ${BigInt(
+              normalizedBillingAccountId,
+            )}
+              AND project."deletedAt" IS NULL
+              AND project_member."userId" = ${BigInt(membershipUserId)}
+              ${projectRoleFilter}
+              AND project_member."deletedAt" IS NULL
+            LIMIT 1
+          `,
+        );
+        successfulLookups += 1;
+
+        if (rows.some((row) => row.hasAccess)) {
+          return true;
+        }
+      } catch (error) {
+        errors.push(`${target.label}: ${this.getErrorMessage(error)}`);
+      }
     }
+
+    if (successfulLookups === 0 && errors.length > 0) {
+      this.logger.warn(
+        `Failed to resolve project billing-account access: ${errors.join("; ")}`,
+      );
+    }
+
+    return false;
   }
 
   /**
@@ -305,24 +340,37 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
     client: PrismaClient,
     billingAccountId: string,
   ): Promise<boolean> {
-    try {
-      const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
-        Prisma.sql`
-          SELECT true AS "hasAccess"
-          FROM projects project
-          WHERE project."billingAccountId" = ${BigInt(billingAccountId)}
-            AND project."deletedAt" IS NULL
-          LIMIT 1
-        `,
-      );
+    const errors: string[] = [];
+    let successfulLookups = 0;
 
-      return rows.some((row) => row.hasAccess);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to resolve project billing-account assignment: ${this.getErrorMessage(error)}`,
-      );
-      return false;
+    for (const target of PROJECT_LOOKUP_TARGETS) {
+      try {
+        const rows = await client.$queryRaw<ProjectBillingAccountAccessRow[]>(
+          Prisma.sql`
+            SELECT true AS "hasAccess"
+            FROM ${target.projectsTable} project
+            WHERE project."billingAccountId" = ${BigInt(billingAccountId)}
+              AND project."deletedAt" IS NULL
+            LIMIT 1
+          `,
+        );
+        successfulLookups += 1;
+
+        if (rows.some((row) => row.hasAccess)) {
+          return true;
+        }
+      } catch (error) {
+        errors.push(`${target.label}: ${this.getErrorMessage(error)}`);
+      }
     }
+
+    if (successfulLookups === 0 && errors.length > 0) {
+      this.logger.warn(
+        `Failed to resolve project billing-account assignment: ${errors.join("; ")}`,
+      );
+    }
+
+    return false;
   }
 
   /**
@@ -552,6 +600,8 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
    * @param userId Normalized numeric Topcoder user id.
    * @param projectIds Candidate project ids from line-item references.
    * @returns Set of candidate project ids with an active project member row.
+   * The lookup checks both the configured search path and the explicit
+   * `projects` schema.
    */
   private async getAccessibleProjectIdsForUser(
     userId: string,
@@ -576,29 +626,39 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
       return result;
     }
 
-    try {
-      const rows = await client.$queryRaw<ProjectAccessRow[]>(
-        Prisma.sql`
-          SELECT DISTINCT "projectId"::text AS "projectId"
-          FROM project_members
-          WHERE "userId" = ${BigInt(userId)}
-            AND "projectId" IN (${Prisma.join(
-              uniqueProjectIds.map((projectId) => BigInt(projectId)),
-            )})
-            AND "deletedAt" IS NULL
-        `,
-      );
+    const errors: string[] = [];
+    let successfulLookups = 0;
 
-      for (const row of rows) {
-        const projectId = this.normalizeNumericTextId(row.projectId);
+    for (const target of PROJECT_LOOKUP_TARGETS) {
+      try {
+        const rows = await client.$queryRaw<ProjectAccessRow[]>(
+          Prisma.sql`
+            SELECT DISTINCT "projectId"::text AS "projectId"
+            FROM ${target.projectMembersTable}
+            WHERE "userId" = ${BigInt(userId)}
+              AND "projectId" IN (${Prisma.join(
+                uniqueProjectIds.map((projectId) => BigInt(projectId)),
+              )})
+              AND "deletedAt" IS NULL
+          `,
+        );
+        successfulLookups += 1;
 
-        if (projectId) {
-          result.add(projectId);
+        for (const row of rows) {
+          const projectId = this.normalizeNumericTextId(row.projectId);
+
+          if (projectId) {
+            result.add(projectId);
+          }
         }
+      } catch (error) {
+        errors.push(`${target.label}: ${this.getErrorMessage(error)}`);
       }
-    } catch (error) {
+    }
+
+    if (successfulLookups === 0 && errors.length > 0) {
       this.logger.warn(
-        `Failed to resolve project access for billing-account entries: ${this.getErrorMessage(error)}`,
+        `Failed to resolve project access for billing-account entries: ${errors.join("; ")}`,
       );
     }
 

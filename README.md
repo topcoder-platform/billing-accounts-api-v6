@@ -44,6 +44,9 @@
   Manager callers only receive locked/consumed line items whose challenge or
   engagement project maps to an active `project_members` row for their user id.
   Line items with unresolved project access are omitted for those callers.
+  Projects DB access checks try both the configured connection search path and
+  the explicit `projects` schema so deployments do not need to rely on a
+  schema-qualified `PROJECTS_DB_URL`.
   Role checks are case-insensitive so mixed token casing does not block access.
 - Configure env: `AUTH_SECRET` or `AUTH0_URL/AUDIENCE/ISSUER` as needed.
 
