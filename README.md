@@ -32,8 +32,8 @@
   Project-scoped billing-account readers are restricted to billing accounts
   granted to their own user id on `GET /billing-accounts`. On
   `GET /billing-accounts/:billingAccountId`, Project Manager callers can read
-  billing accounts granted to their own user id or assigned to active projects
-  they belong to. Plain `Topcoder User` project-member callers need a
+  billing accounts granted to their own user id or assigned to non-deleted
+  projects. Plain `Topcoder User` project-member callers need a
   management or copilot project role for the project fallback.
   Copilot-only callers receive billing-account responses with `markup` omitted
   and `memberPaymentsRemaining` derived server-side as total remaining minus
