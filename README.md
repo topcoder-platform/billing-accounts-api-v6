@@ -46,7 +46,9 @@
   Line items with unresolved project access are omitted for those callers.
   Projects DB access checks try both the configured connection search path and
   the explicit `projects` schema so deployments do not need to rely on a
-  schema-qualified `PROJECTS_DB_URL`.
+  schema-qualified `PROJECTS_DB_URL`. Those checks compare ids as normalized
+  text so legacy varchar project columns and newer numeric project columns both
+  work.
   Role checks are case-insensitive so mixed token casing does not block access.
 - Configure env: `AUTH_SECRET` or `AUTH0_URL/AUDIENCE/ISSUER` as needed.
 

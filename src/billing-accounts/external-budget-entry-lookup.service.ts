@@ -79,7 +79,9 @@ const PROJECT_LOOKUP_TARGETS: ProjectLookupTarget[] = [
  * Missing DB URLs or missing referenced rows produce empty lookup mappings
  * rather than failing the billing account response. Projects API lookups try
  * both the configured connection search path and the explicit `projects`
- * schema, because deployment URLs are not always schema-qualified.
+ * schema, because deployment URLs are not always schema-qualified. Project
+ * ids are compared as normalized text so legacy varchar columns and newer
+ * numeric columns both work.
  */
 @Injectable()
 export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
@@ -237,7 +239,8 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
    * members require non-deleted membership. Callers without a billing-account
    * Topcoder role can require the membership to be a management/copilot
    * project role. The Projects DB table lookup is tolerant of URLs with or
-   * without a `schema=projects` search path.
+   * without a `schema=projects` search path, and of project id columns stored
+   * as either numeric or varchar values.
    *
    * @param billingAccountId Topcoder billing-account id from the detail route.
    * @param userId Topcoder user id from the authenticated caller; optional
@@ -299,12 +302,10 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
             SELECT true AS "hasAccess"
             FROM ${target.projectsTable} project
             INNER JOIN ${target.projectMembersTable} project_member
-              ON project_member."projectId" = project."id"
-            WHERE project."billingAccountId" = ${BigInt(
-              normalizedBillingAccountId,
-            )}
+              ON project_member."projectId"::text = project."id"::text
+            WHERE project."billingAccountId"::text = ${normalizedBillingAccountId}
               AND project."deletedAt" IS NULL
-              AND project_member."userId" = ${BigInt(membershipUserId)}
+              AND project_member."userId"::text = ${membershipUserId}
               ${projectRoleFilter}
               AND project_member."deletedAt" IS NULL
             LIMIT 1
@@ -349,7 +350,7 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
           Prisma.sql`
             SELECT true AS "hasAccess"
             FROM ${target.projectsTable} project
-            WHERE project."billingAccountId" = ${BigInt(billingAccountId)}
+            WHERE project."billingAccountId"::text = ${billingAccountId}
               AND project."deletedAt" IS NULL
             LIMIT 1
           `,
@@ -601,7 +602,8 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
    * @param projectIds Candidate project ids from line-item references.
    * @returns Set of candidate project ids with an active project member row.
    * The lookup checks both the configured search path and the explicit
-   * `projects` schema.
+   * `projects` schema. Id comparisons are text-normalized so both legacy
+   * varchar columns and newer numeric columns work.
    */
   private async getAccessibleProjectIdsForUser(
     userId: string,
@@ -635,10 +637,8 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
           Prisma.sql`
             SELECT DISTINCT "projectId"::text AS "projectId"
             FROM ${target.projectMembersTable}
-            WHERE "userId" = ${BigInt(userId)}
-              AND "projectId" IN (${Prisma.join(
-                uniqueProjectIds.map((projectId) => BigInt(projectId)),
-              )})
+            WHERE "userId"::text = ${userId}
+              AND "projectId"::text IN (${Prisma.join(uniqueProjectIds)})
               AND "deletedAt" IS NULL
           `,
         );
