@@ -4,6 +4,7 @@
   "private": true,
   "description": "Topcoder Billing Accounts & Clients API (NestJS + Prisma, CommonJS)",
   "main": "dist/main.js",
+  "packageManager": "pnpm@10.33.2",
   "type": "commonjs",
   "scripts": {
     "build": "prisma generate && nest build",
@@ -61,7 +62,14 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "@prisma/client"
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma"
+    ],
+    "ignoredBuiltDependencies": [
+      "@nestjs/core",
+      "@scarf/scarf",
+      "dtrace-provider"
     ]
   }
 }

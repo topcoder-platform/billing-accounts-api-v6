@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 
 # ---- Dependencies Stage ----
 FROM base AS deps
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.33.2
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
