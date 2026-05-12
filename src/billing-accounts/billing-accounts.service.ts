@@ -29,6 +29,7 @@ import {
   PROJECT_MANAGER_ROLE,
   TALENT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
   TOPCODER_TALENT_MANAGER_ROLE,
 } from "../auth/constants";
 
@@ -50,13 +51,28 @@ const UNRESTRICTED_BILLING_ACCOUNT_READ_ROLES = [
   TOPCODER_TALENT_MANAGER_ROLE,
 ];
 
-const RESTRICTED_PROJECT_MANAGER_READ_ROLES = [
+const PROJECT_SCOPED_BILLING_ACCOUNT_READ_ROLES = [
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
+];
+
+const PROJECT_BILLING_ACCOUNT_TOPCODER_DETAIL_ROLES = [
   PROJECT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
 ];
 
 const PROJECT_ACCESS_FILTERED_LINE_ITEM_ROLES = [
   COPILOT_ROLE,
+  PROJECT_MANAGER_ROLE,
+  TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
+  TALENT_MANAGER_ROLE,
+  TOPCODER_TALENT_MANAGER_ROLE,
+];
+
+const BILLING_ACCOUNT_MARKUP_VISIBLE_ROLES = [
+  ADMIN_ROLE,
   PROJECT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
   TALENT_MANAGER_ROLE,
@@ -103,6 +119,23 @@ interface NormalizedEngagementConsume {
 interface ProjectAccessFilteredLineItems {
   lockedAmounts: BudgetAmountLineItem[];
   consumedAmounts: BudgetAmountLineItem[];
+}
+
+export interface BudgetLineItemResponse {
+  amount: Prisma.Decimal;
+  date: Date;
+  externalId: string;
+  externalType: BudgetEntryExternalTypeValue;
+  externalName: string | null;
+  challengeId?: string;
+  memberPaymentAmount?: number;
+}
+
+export interface BillingAccountAuthResponse {
+  markup?: unknown;
+  totalBudgetRemaining?: unknown;
+  lockedAmounts?: BudgetLineItemResponse[];
+  consumedAmounts?: BudgetLineItemResponse[];
 }
 
 /**
@@ -162,26 +195,25 @@ function getNormalizedAuthUserId(
 }
 
 /**
- * Returns the enforced access-grant user id for restricted Project Manager
- * billing-account reads.
+ * Returns the enforced user id for project-scoped billing-account reads.
  *
  * `undefined` means the caller keeps unrestricted read behavior. `null`
- * indicates a restricted Project Manager caller without a usable `userId`,
+ * indicates a restricted project-scoped caller without a usable `userId`,
  * which should be treated as no accessible accounts.
  *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns Enforced user id, `null`, or `undefined`.
  */
-function resolveRestrictedProjectManagerUserId(
+function resolveProjectScopedBillingAccountReadUserId(
   authUser?: BillingAccountsAuthUser,
 ): string | null | undefined {
   const normalizedRoles = getNormalizedAuthUserRoles(authUser);
-  const hasRestrictedProjectManagerRole =
-    RESTRICTED_PROJECT_MANAGER_READ_ROLES.some((role) =>
+  const hasProjectScopedBillingAccountReadRole =
+    PROJECT_SCOPED_BILLING_ACCOUNT_READ_ROLES.some((role) =>
       normalizedRoles.includes(role.toLowerCase()),
     );
 
-  if (!hasRestrictedProjectManagerRole) {
+  if (!hasProjectScopedBillingAccountReadRole) {
     return undefined;
   }
 
@@ -197,12 +229,46 @@ function resolveRestrictedProjectManagerUserId(
 }
 
 /**
+ * Returns whether the caller has a Topcoder role that can read project billing
+ * account details in Projects API.
+ *
+ * These global roles can read a project billing account when the account is
+ * assigned to a non-deleted project. Plain `Topcoder User` project members
+ * must keep the stricter project membership role check.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns `true` when the caller can use project-assigned billing-account access.
+ */
+function hasProjectBillingAccountTopcoderDetailRole(
+  authUser?: BillingAccountsAuthUser,
+): boolean {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+
+  return PROJECT_BILLING_ACCOUNT_TOPCODER_DETAIL_ROLES.some((role) =>
+    normalizedRoles.includes(role.toLowerCase()),
+  );
+}
+
+/**
+ * Returns whether project fallback access should enforce a management/copilot
+ * project member role.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns `true` when the fallback must require an allowed project role.
+ */
+function shouldRequireProjectBillingAccountRoleForFallback(
+  authUser?: BillingAccountsAuthUser,
+): boolean {
+  return !hasProjectBillingAccountTopcoderDetailRole(authUser);
+}
+
+/**
  * Returns the user id to use for project-level line-item filtering.
  *
- * Administrators keep full line-item visibility. Copilots, Project Managers,
- * and Talent Managers only receive line items whose underlying challenge or
- * engagement project can be resolved to an active project membership for their
- * user id.
+ * Administrators keep full line-item visibility. Copilots, project-scoped
+ * billing-account readers, and Talent Managers only receive line items whose
+ * underlying challenge or engagement project can be resolved to an active
+ * project membership for their user id.
  *
  * @param authUser Authenticated caller context from `req.authUser`.
  * @returns User id to filter by, `null` when missing, or `undefined` when no
@@ -228,6 +294,31 @@ function resolveProjectAccessFilteredLineItemUserId(
   }
 
   return getNormalizedAuthUserId(authUser) ?? null;
+}
+
+/**
+ * Returns whether the caller should receive copilot-safe billing-account data.
+ *
+ * Copilots must not receive the raw billing-account markup. Manager, Talent
+ * Manager, and administrator roles retain the existing billing-account detail
+ * response shape even when a token also carries the copilot role.
+ *
+ * @param authUser Authenticated caller context from `req.authUser`.
+ * @returns `true` when markup should be removed from billing-account responses.
+ */
+function shouldHideMarkupForCopilot(
+  authUser?: BillingAccountsAuthUser,
+): boolean {
+  const normalizedRoles = getNormalizedAuthUserRoles(authUser);
+  const hasCopilotRole = normalizedRoles.includes(COPILOT_ROLE.toLowerCase());
+
+  if (!hasCopilotRole) {
+    return false;
+  }
+
+  return !BILLING_ACCOUNT_MARKUP_VISIBLE_ROLES.some((role) =>
+    normalizedRoles.includes(role.toLowerCase()),
+  );
 }
 
 @Injectable()
@@ -263,7 +354,7 @@ export class BillingAccountsService {
   /**
    * Lists billing accounts with optional filtering, sorting, and pagination.
    *
-   * Project Manager callers are constrained to billing accounts granted to
+   * Project-scoped callers are constrained to billing accounts granted to
    * their own `userId`, regardless of an explicit `userId` query override.
    *
    * @param q Query filters and pagination controls.
@@ -285,10 +376,10 @@ export class BillingAccountsService {
       sortBy,
       sortOrder = "asc",
     } = q;
-    const restrictedProjectManagerUserId =
-      resolveRestrictedProjectManagerUserId(authUser);
+    const projectScopedBillingAccountReadUserId =
+      resolveProjectScopedBillingAccountReadUserId(authUser);
 
-    if (restrictedProjectManagerUserId === null) {
+    if (projectScopedBillingAccountReadUserId === null) {
       return {
         page,
         perPage,
@@ -303,8 +394,10 @@ export class BillingAccountsService {
       ...(status ? { status } : {}),
     };
 
-    if (restrictedProjectManagerUserId) {
-      where.accessGrants = { some: { userId: restrictedProjectManagerUserId } };
+    if (projectScopedBillingAccountReadUserId) {
+      where.accessGrants = {
+        some: { userId: projectScopedBillingAccountReadUserId },
+      };
     } else if (userId) {
       where.accessGrants = { some: { userId } };
     }
@@ -392,7 +485,9 @@ export class BillingAccountsService {
       perPage,
       total,
       totalPages: Math.ceil(total / perPage),
-      data,
+      data: data.map((billingAccount) =>
+        this.serializeBillingAccountForAuthUser(billingAccount, authUser),
+      ),
     };
   }
 
@@ -425,13 +520,19 @@ export class BillingAccountsService {
    * Fetches a single billing account, its normalized budget line items, and
    * budget aggregates.
    *
-   * Project Manager callers can read only billing accounts granted to their own
-   * `userId`. Missing access is surfaced as not found to avoid leaking account
-   * existence. Locked and consumed line items expose `amount`, `date`,
-   * `externalId`, `externalType`, and `externalName`; challenge rows also expose
-   * the deprecated `challengeId` compatibility alias. Copilot, Project Manager,
-   * and Talent Manager callers only receive line items for projects they belong
-   * to; unresolved project access hides the line item.
+   * Project-scoped callers can read billing accounts granted to their own
+   * `userId`, or billing accounts assigned to a non-deleted project. Plain
+   * `Topcoder User` callers need an allowed management/copilot project role
+   * for that project fallback, while global Project Manager callers can use
+   * the project assignment directly. Missing access is surfaced as not found
+   * to avoid leaking account existence. Locked and consumed line items expose
+   * `amount`, `date`, `externalId`, `externalType`, and `externalName`;
+   * challenge rows also expose the deprecated `challengeId` compatibility
+   * alias. Copilot-only callers also receive `memberPaymentAmount` on each
+   * line item so the UI can show the payment value without exposing markup.
+   * Copilot, project-scoped, and Talent Manager callers only receive line
+   * items for projects they belong to; unresolved project access hides the
+   * line item.
    *
    * @param billingAccountId Billing-account identifier.
    * @param authUser Authenticated caller context from `req.authUser`.
@@ -441,30 +542,56 @@ export class BillingAccountsService {
    * caller does not have access to it.
    */
   async get(billingAccountId: number, authUser?: BillingAccountsAuthUser) {
-    const restrictedProjectManagerUserId =
-      resolveRestrictedProjectManagerUserId(authUser);
+    const projectScopedBillingAccountReadUserId =
+      resolveProjectScopedBillingAccountReadUserId(authUser);
+    const hasTopcoderProjectBillingDetailRole =
+      hasProjectBillingAccountTopcoderDetailRole(authUser);
     const include = {
       client: true,
       lockedAmounts: true,
       consumedAmounts: true,
     };
-    const ba =
-      restrictedProjectManagerUserId === undefined
+    let ba =
+      projectScopedBillingAccountReadUserId === undefined
         ? await this.prisma.billingAccount.findUnique({
             where: { id: billingAccountId },
             include,
           })
-        : restrictedProjectManagerUserId === null
+        : projectScopedBillingAccountReadUserId === null
           ? null
           : await this.prisma.billingAccount.findFirst({
               where: {
                 id: billingAccountId,
                 accessGrants: {
-                  some: { userId: restrictedProjectManagerUserId },
+                  some: { userId: projectScopedBillingAccountReadUserId },
                 },
               },
               include,
             });
+
+    if (
+      !ba &&
+      (projectScopedBillingAccountReadUserId ||
+        hasTopcoderProjectBillingDetailRole)
+    ) {
+      const hasProjectBillingAccountAccess =
+        await this.externalBudgetEntryLookup.hasProjectBillingAccountAccess(
+          billingAccountId,
+          projectScopedBillingAccountReadUserId ?? undefined,
+          {
+            allowAnyAssignedProject: hasTopcoderProjectBillingDetailRole,
+            requireAllowedProjectRole:
+              shouldRequireProjectBillingAccountRoleForFallback(authUser),
+          },
+        );
+
+      if (hasProjectBillingAccountAccess) {
+        ba = await this.prisma.billingAccount.findUnique({
+          where: { id: billingAccountId },
+          include,
+        });
+      }
+    }
 
     if (!ba)
       throw new NotFoundException(
@@ -499,7 +626,7 @@ export class BillingAccountsService {
       ],
     );
 
-    return {
+    const response = {
       ...ba,
       lockedAmounts: lockedAmounts.map((lineItem) =>
         this.serializeBudgetLineItem(lineItem, externalNames),
@@ -511,6 +638,8 @@ export class BillingAccountsService {
       consumedBudget: consumed,
       totalBudgetRemaining: remaining,
     };
+
+    return this.serializeBillingAccountForAuthUser(response, authUser);
   }
 
   async update(billingAccountId: number, dto: UpdateBillingAccountDto) {
@@ -1105,7 +1234,7 @@ export class BillingAccountsService {
   private serializeBudgetLineItem(
     lineItem: BudgetAmountLineItem,
     externalNames: Map<string, string>,
-  ) {
+  ): BudgetLineItemResponse {
     const reference = this.toBudgetEntryReference(lineItem);
     const serializedLineItem = {
       amount: lineItem.amount,
@@ -1119,6 +1248,150 @@ export class BillingAccountsService {
     return lineItem.externalType === "CHALLENGE"
       ? { ...serializedLineItem, challengeId: lineItem.externalId }
       : serializedLineItem;
+  }
+
+  /**
+   * Calculates a copilot-safe member-payment amount from a billing ledger amount.
+   *
+   * Billing locked and consumed rows store the member payment plus its markup
+   * fee. This reverses that ledger amount while keeping the raw billing markup
+   * on the server. A zero markup means the full amount is a member payment.
+   *
+   * @param billingAccountAmount Billing ledger amount that includes markup.
+   * @param markup Billing-account markup from persistence.
+   * @returns Rounded member-payment amount, or `undefined` when inputs are invalid.
+   */
+  private calculateMemberPaymentAmount(
+    billingAccountAmount: unknown,
+    markup: unknown,
+  ): number | undefined {
+    const amount = Number(billingAccountAmount);
+    const rawMarkup = Number(markup);
+
+    if (!Number.isFinite(amount) || !Number.isFinite(rawMarkup)) {
+      return undefined;
+    }
+
+    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
+
+    if (normalizedMarkup < 0) {
+      return undefined;
+    }
+
+    if (normalizedMarkup === 0) {
+      return Number(amount.toFixed(2));
+    }
+
+    return Number((amount / (1 + normalizedMarkup)).toFixed(2));
+  }
+
+  /**
+   * Calculates the copilot-safe member-payment capacity for a billing account.
+   *
+   * Remaining capacity applies the markup as a direct reduction from the
+   * current remaining budget: total remaining - (total remaining * markup).
+   *
+   * @param totalBudgetRemaining Current remaining billing-account budget.
+   * @param markup Billing-account markup from persistence.
+   * @returns Rounded member-payment capacity, or `undefined` when inputs are invalid.
+   */
+  private calculateMemberPaymentsRemaining(
+    totalBudgetRemaining: unknown,
+    markup: unknown,
+  ): number | undefined {
+    const totalRemaining = Number(totalBudgetRemaining);
+    const rawMarkup = Number(markup);
+
+    if (!Number.isFinite(totalRemaining) || !Number.isFinite(rawMarkup)) {
+      return undefined;
+    }
+
+    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
+
+    if (normalizedMarkup < 0) {
+      return undefined;
+    }
+
+    return Number(
+      (totalRemaining - totalRemaining * normalizedMarkup).toFixed(2),
+    );
+  }
+
+  /**
+   * Adds copilot-safe member-payment display amounts to budget line items.
+   *
+   * @param lineItems Serialized locked or consumed line items.
+   * @param markup Billing-account markup from persistence.
+   * @returns Line items with `memberPaymentAmount` when it can be calculated.
+   */
+  private serializeLineItemsForCopilot(
+    lineItems: BudgetLineItemResponse[] | undefined,
+    markup: unknown,
+  ): BudgetLineItemResponse[] | undefined {
+    if (!lineItems) {
+      return undefined;
+    }
+
+    return lineItems.map((lineItem) => {
+      const memberPaymentAmount = this.calculateMemberPaymentAmount(
+        lineItem.amount,
+        markup,
+      );
+
+      return memberPaymentAmount === undefined
+        ? lineItem
+        : {
+            ...lineItem,
+            memberPaymentAmount,
+          };
+    });
+  }
+
+  /**
+   * Removes raw markup from copilot responses and adds derived safe budget fields.
+   *
+   * @param billingAccount Billing-account response object after budget totals are available.
+   * @param authUser Authenticated caller context from `req.authUser`.
+   * @returns The original response for privileged callers, or a copilot-safe copy.
+   */
+  private serializeBillingAccountForAuthUser<
+    T extends BillingAccountAuthResponse,
+  >(billingAccount: T, authUser?: BillingAccountsAuthUser) {
+    if (!shouldHideMarkupForCopilot(authUser)) {
+      return billingAccount;
+    }
+
+    const { markup, ...sanitizedBillingAccount } = billingAccount;
+    const memberPaymentsRemaining = this.calculateMemberPaymentsRemaining(
+      billingAccount.totalBudgetRemaining,
+      markup,
+    );
+    const copilotBillingAccount = {
+      ...sanitizedBillingAccount,
+      ...(sanitizedBillingAccount.lockedAmounts
+        ? {
+            lockedAmounts: this.serializeLineItemsForCopilot(
+              sanitizedBillingAccount.lockedAmounts,
+              markup,
+            ),
+          }
+        : {}),
+      ...(sanitizedBillingAccount.consumedAmounts
+        ? {
+            consumedAmounts: this.serializeLineItemsForCopilot(
+              sanitizedBillingAccount.consumedAmounts,
+              markup,
+            ),
+          }
+        : {}),
+    };
+
+    return memberPaymentsRemaining === undefined
+      ? copilotBillingAccount
+      : {
+          ...copilotBillingAccount,
+          memberPaymentsRemaining,
+        };
   }
 
   /**

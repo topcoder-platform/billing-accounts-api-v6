@@ -30,6 +30,7 @@ import {
   PROJECT_MANAGER_ROLE,
   TALENT_MANAGER_ROLE,
   TOPCODER_PROJECT_MANAGER_ROLE,
+  TOPCODER_USER_ROLE,
   TOPCODER_TALENT_MANAGER_ROLE,
 } from "../auth/constants";
 import type { Request } from "express";
@@ -58,6 +59,11 @@ const BILLING_ACCOUNT_PROJECT_READ_ROLES = [
   TOPCODER_PROJECT_MANAGER_ROLE,
 ];
 
+const BILLING_ACCOUNT_DETAIL_READ_ROLES = [
+  ...BILLING_ACCOUNT_PROJECT_READ_ROLES,
+  TOPCODER_USER_ROLE,
+];
+
 const BILLING_ACCOUNT_MANAGE_ROLES = [
   ADMIN_ROLE,
   TALENT_MANAGER_ROLE,
@@ -83,7 +89,7 @@ export class BillingAccountsController {
     buildOperationDoc({
       summary: "List billing accounts",
       description:
-        "Retrieve billing accounts with optional filters, sorting, and pagination. Project Managers are limited to billing accounts granted to their own user id.",
+        "Retrieve billing accounts with optional filters, sorting, and pagination. Project Managers are limited to billing accounts granted to their own user id. Copilot-only callers receive copilot-safe budget data without the raw markup field.",
       jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
@@ -167,14 +173,14 @@ export class BillingAccountsController {
 
   @Get(":billingAccountId")
   @UseGuards(RolesGuard, ScopesGuard)
-  @Roles(...BILLING_ACCOUNT_PROJECT_READ_ROLES)
+  @Roles(...BILLING_ACCOUNT_DETAIL_READ_ROLES)
   @Scopes(SCOPES.READ_BA, SCOPES.ALL_BA)
   @ApiOperation(
     buildOperationDoc({
       summary: "Get a billing account",
       description:
-        "Fetch a billing account by its identifier, including budget, client data, and normalized locked/consumed line items. Line items include amount, date, externalId, externalType, externalName, and challengeId only for legacy challenge compatibility. Project Managers can read only billing accounts granted to them. Copilot, Project Manager, and Talent Manager callers only receive locked/consumed line items for projects they belong to.",
-      jwtRoles: BILLING_ACCOUNT_PROJECT_READ_ROLES,
+        "Fetch a billing account by its identifier, including budget, client data, and normalized locked/consumed line items. Line items include amount, date, externalId, externalType, externalName, and challengeId only for legacy challenge compatibility. Project Managers can read billing accounts granted to them or assigned to non-deleted projects; plain Topcoder User project members need an allowed project billing-account role. Copilot, Project Manager, Topcoder User, and Talent Manager callers only receive locked/consumed line items for projects they belong to. Copilot-only callers receive copilot-safe budget data without the raw markup field, including memberPaymentsRemaining and per-line-item memberPaymentAmount values.",
+      jwtRoles: BILLING_ACCOUNT_DETAIL_READ_ROLES,
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
   )
