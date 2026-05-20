@@ -18,6 +18,12 @@ interface ChallengeProjectRow {
   projectId: number | bigint | string | null;
 }
 
+interface ChallengeBillingMarkupRow {
+  id: string;
+  legacyId: number | null;
+  markup: number | null;
+}
+
 interface EngagementNameRow {
   id: string;
   title: string | null;
@@ -141,6 +147,70 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
           externalId,
         }),
         name,
+      );
+    }
+
+    return result;
+  }
+
+  /**
+   * Resolve challenge billing markups by current challenge ids and numeric legacy ids.
+   *
+   * @param externalIds Challenge ids stored on budget entries.
+   * @returns Map of each matched challenge id or legacy id to billing markup.
+   */
+  async getChallengeBillingMarkupsByIds(
+    externalIds: string[],
+  ): Promise<Map<string, number>> {
+    const result = new Map<string, number>();
+    const uniqueExternalIds = [...new Set(externalIds.filter(Boolean))];
+
+    if (uniqueExternalIds.length === 0) {
+      return result;
+    }
+
+    const client = this.getChallengeClient();
+
+    if (!client) {
+      return result;
+    }
+
+    try {
+      const idRows = await client.$queryRaw<ChallengeBillingMarkupRow[]>(
+        Prisma.sql`
+          SELECT c."id", c."legacyId", cb."markup"
+          FROM "Challenge" c
+          LEFT JOIN "ChallengeBilling" cb
+            ON cb."challengeId" = c."id"
+          WHERE c."id" IN (${Prisma.join(uniqueExternalIds)})
+        `,
+      );
+
+      for (const row of idRows) {
+        this.addChallengeBillingMarkup(result, row, row.id);
+      }
+
+      const legacyIds = this.getNumericLegacyIds(uniqueExternalIds);
+      if (legacyIds.length > 0) {
+        const legacyRows = await client.$queryRaw<ChallengeBillingMarkupRow[]>(
+          Prisma.sql`
+            SELECT c."id", c."legacyId", cb."markup"
+            FROM "Challenge" c
+            LEFT JOIN "ChallengeBilling" cb
+              ON cb."challengeId" = c."id"
+            WHERE c."legacyId" IN (${Prisma.join(legacyIds)})
+          `,
+        );
+
+        for (const row of legacyRows) {
+          if (row.legacyId !== null) {
+            this.addChallengeBillingMarkup(result, row, String(row.legacyId));
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to resolve challenge billing markups for billing-account entries: ${this.getErrorMessage(error)}`,
       );
     }
 
@@ -685,6 +755,25 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
 
     if (row.legacyId !== null) {
       result.set(String(row.legacyId), projectId);
+    }
+  }
+
+  /**
+   * Adds a finite challenge billing markup to the lookup result.
+   *
+   * @param result Mutable challenge markup map.
+   * @param row Challenge billing row returned by the challenge database.
+   * @param externalId Budget-entry external id that should resolve to the markup.
+   */
+  private addChallengeBillingMarkup(
+    result: Map<string, number>,
+    row: ChallengeBillingMarkupRow,
+    externalId: string,
+  ): void {
+    const markup = Number(row.markup);
+
+    if (Number.isFinite(markup)) {
+      result.set(externalId, markup);
     }
   }
 
