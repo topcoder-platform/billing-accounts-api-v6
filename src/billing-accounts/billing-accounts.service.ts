@@ -1249,7 +1249,7 @@ export class BillingAccountsService {
    *
    * @param lineItem Locked or consumed budget row.
    * @param externalNames Resolved names keyed by typed external reference.
-   * @returns API-ready line item with normalized date and resolved name.
+   * @returns API-ready line item with the ledger-entry creation date and resolved name.
    */
   private serializeBudgetLineItem(
     lineItem: BudgetAmountLineItem,
@@ -1258,7 +1258,7 @@ export class BillingAccountsService {
     const reference = this.toBudgetEntryReference(lineItem);
     const serializedLineItem = {
       amount: lineItem.amount,
-      date: lineItem.updatedAt,
+      date: lineItem.createdAt,
       externalId: lineItem.externalId,
       externalType: lineItem.externalType,
       externalName:
