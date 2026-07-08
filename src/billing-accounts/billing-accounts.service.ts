@@ -1353,7 +1353,9 @@ export class BillingAccountsService {
    *
    * Billing rows that store member payments plus their markup fee can be
    * reversed with this helper while keeping raw markup math on the server. A
-   * zero markup means the full amount is a member payment.
+   * zero markup means the full amount is a member payment. Billing-account
+   * markup is stored as the direct multiplier used by finance and ledger math,
+   * so values greater than `1` are valid and are not percentage-normalized.
    *
    * @param billingAccountAmount Billing ledger amount that includes markup.
    * @param markup Billing or challenge markup from persistence.
@@ -1370,24 +1372,22 @@ export class BillingAccountsService {
       return undefined;
     }
 
-    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
-
-    if (normalizedMarkup < 0) {
+    if (rawMarkup < 0) {
       return undefined;
     }
 
-    if (normalizedMarkup === 0) {
+    if (rawMarkup === 0) {
       return Number(amount.toFixed(2));
     }
 
-    return Number((amount / (1 + normalizedMarkup)).toFixed(2));
+    return Number((amount / (1 + rawMarkup)).toFixed(2));
   }
 
   /**
    * Calculates the copilot-safe member-payment capacity for a billing account.
    *
-   * Remaining capacity applies the markup as a direct reduction from the
-   * current remaining budget: total remaining - (total remaining * markup).
+   * Remaining capacity reverses the billing-account markup from the current
+   * remaining budget using the same multiplier contract as line items.
    *
    * @param totalBudgetRemaining Current remaining billing-account budget.
    * @param markup Billing-account markup from persistence.
@@ -1404,15 +1404,11 @@ export class BillingAccountsService {
       return undefined;
     }
 
-    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
-
-    if (normalizedMarkup < 0) {
+    if (rawMarkup < 0) {
       return undefined;
     }
 
-    return Number(
-      (totalRemaining - totalRemaining * normalizedMarkup).toFixed(2),
-    );
+    return this.calculateMemberPaymentAmount(totalRemaining, rawMarkup);
   }
 
   /**
