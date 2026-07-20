@@ -1,0 +1,10 @@
+.git
+.github
+.circleci
+.env
+.env.*
+!.env.example
+dist
+node_modules
+npm-debug.log*
+pnpm-debug.log*
