@@ -91,6 +91,8 @@ interface BudgetAmountLineItem {
   updatedAt: Date;
 }
 
+type BudgetLineItemStatus = "locked" | "consumed";
+
 interface BillingAccountBudgetLockRow {
   budget: Prisma.Decimal;
 }
@@ -526,13 +528,14 @@ export class BillingAccountsService {
    * for that project fallback, while global Project Manager callers can use
    * the project assignment directly. Missing access is surfaced as not found
    * to avoid leaking account existence. Locked and consumed line items expose
-   * `amount`, `date`, `externalId`, `externalType`, and `externalName`;
-   * challenge rows also expose the deprecated `challengeId` compatibility
-   * alias. Copilot-only callers also receive `memberPaymentAmount` on each
-   * line item so the UI can show the payment value without exposing markup.
-   * Copilot, project-scoped, and Talent Manager callers only receive line
-   * items for projects they belong to; unresolved project access hides the
-   * line item.
+   * `amount`, `memberPaymentAmount`, `date`, `externalId`, `externalType`,
+   * and `externalName`; challenge rows also expose the deprecated
+   * `challengeId` compatibility alias. `memberPaymentAmount` lets the UI show
+   * the member-payment subtotal separately from the ledger charge that includes
+   * billing markup. Copilot-only callers receive the same line-item subtotals
+   * while raw `markup` is hidden. Copilot, project-scoped, and Talent Manager
+   * callers only receive line items for projects they belong to; unresolved
+   * project access hides the line item.
    *
    * @param billingAccountId Billing-account identifier.
    * @param authUser Authenticated caller context from `req.authUser`.
@@ -615,24 +618,41 @@ export class BillingAccountsService {
         },
         authUser,
       );
-    const externalNames = await this.externalBudgetEntryLookup.getExternalNames(
-      [
-        ...lockedAmounts.map((lineItem) =>
-          this.toBudgetEntryReference(lineItem),
-        ),
-        ...consumedAmounts.map((lineItem) =>
-          this.toBudgetEntryReference(lineItem),
-        ),
-      ],
+    const budgetEntryReferences = [
+      ...lockedAmounts.map((lineItem) => this.toBudgetEntryReference(lineItem)),
+      ...consumedAmounts.map((lineItem) =>
+        this.toBudgetEntryReference(lineItem),
+      ),
+    ];
+    const challengeReferenceIds = budgetEntryReferences
+      .filter((reference) => reference.externalType === "CHALLENGE")
+      .map((reference) => reference.externalId);
+    const [externalNames, challengeBillingMarkups] = await Promise.all([
+      this.externalBudgetEntryLookup.getExternalNames(budgetEntryReferences),
+      this.externalBudgetEntryLookup.getChallengeBillingMarkupsByIds(
+        challengeReferenceIds,
+      ),
+    ]);
+    const serializedLockedAmounts = lockedAmounts.map((lineItem) =>
+      this.serializeBudgetLineItem(lineItem, externalNames),
+    );
+    const serializedConsumedAmounts = consumedAmounts.map((lineItem) =>
+      this.serializeBudgetLineItem(lineItem, externalNames),
     );
 
     const response = {
       ...ba,
-      lockedAmounts: lockedAmounts.map((lineItem) =>
-        this.serializeBudgetLineItem(lineItem, externalNames),
+      lockedAmounts: this.addMemberPaymentAmountsToLineItems(
+        "locked",
+        serializedLockedAmounts,
+        ba.markup,
+        challengeBillingMarkups,
       ),
-      consumedAmounts: consumedAmounts.map((lineItem) =>
-        this.serializeBudgetLineItem(lineItem, externalNames),
+      consumedAmounts: this.addMemberPaymentAmountsToLineItems(
+        "consumed",
+        serializedConsumedAmounts,
+        ba.markup,
+        challengeBillingMarkups,
       ),
       lockedBudget: locked,
       consumedBudget: consumed,
@@ -1229,7 +1249,7 @@ export class BillingAccountsService {
    *
    * @param lineItem Locked or consumed budget row.
    * @param externalNames Resolved names keyed by typed external reference.
-   * @returns API-ready line item with normalized date and resolved name.
+   * @returns API-ready line item with the ledger-entry creation date and resolved name.
    */
   private serializeBudgetLineItem(
     lineItem: BudgetAmountLineItem,
@@ -1238,7 +1258,7 @@ export class BillingAccountsService {
     const reference = this.toBudgetEntryReference(lineItem);
     const serializedLineItem = {
       amount: lineItem.amount,
-      date: lineItem.updatedAt,
+      date: lineItem.createdAt,
       externalId: lineItem.externalId,
       externalType: lineItem.externalType,
       externalName:
@@ -1251,14 +1271,94 @@ export class BillingAccountsService {
   }
 
   /**
+   * Rounds a stored ledger amount for display-oriented member-payment fields.
+   *
+   * @param amount Stored billing-account amount.
+   * @returns Amount rounded to cents, or `undefined` when it is invalid.
+   */
+  private roundMemberPaymentAmount(amount: unknown): number | undefined {
+    const normalizedAmount = Number(amount);
+
+    return Number.isFinite(normalizedAmount)
+      ? Number(normalizedAmount.toFixed(2))
+      : undefined;
+  }
+
+  /**
+   * Resolves the member-payment subtotal for one detail line item.
+   *
+   * @param status Source budget bucket for the row.
+   * @param lineItem Serialized billing-account line item.
+   * @param billingMarkup Billing-account markup from persistence.
+   * @param challengeBillingMarkups Challenge-specific markups keyed by external id.
+   * @returns Member-payment subtotal rounded to cents, or `undefined` when it cannot be derived.
+   * @remarks Locked challenge rows already store the member-payment subtotal.
+   * Consumed challenge rows use challenge-specific markup when available so
+   * zero-markup challenges do not inherit the billing-account default.
+   */
+  private getLineItemMemberPaymentAmount(
+    status: BudgetLineItemStatus,
+    lineItem: BudgetLineItemResponse,
+    billingMarkup: unknown,
+    challengeBillingMarkups: Map<string, number>,
+  ): number | undefined {
+    if (lineItem.externalType === "CHALLENGE") {
+      if (status === "locked") {
+        return this.roundMemberPaymentAmount(lineItem.amount);
+      }
+
+      return this.calculateMemberPaymentAmount(
+        lineItem.amount,
+        challengeBillingMarkups.get(lineItem.externalId) ?? billingMarkup,
+      );
+    }
+
+    return this.calculateMemberPaymentAmount(lineItem.amount, billingMarkup);
+  }
+
+  /**
+   * Adds member-payment subtotals to billing-account detail line items.
+   *
+   * @param status Source budget bucket for the line items.
+   * @param lineItems Serialized locked or consumed line items.
+   * @param billingMarkup Billing-account markup from persistence.
+   * @param challengeBillingMarkups Challenge-specific markups keyed by external id.
+   * @returns Line items with `memberPaymentAmount` when it can be calculated.
+   */
+  private addMemberPaymentAmountsToLineItems(
+    status: BudgetLineItemStatus,
+    lineItems: BudgetLineItemResponse[],
+    billingMarkup: unknown,
+    challengeBillingMarkups: Map<string, number>,
+  ): BudgetLineItemResponse[] {
+    return lineItems.map((lineItem) => {
+      const memberPaymentAmount = this.getLineItemMemberPaymentAmount(
+        status,
+        lineItem,
+        billingMarkup,
+        challengeBillingMarkups,
+      );
+
+      return memberPaymentAmount === undefined
+        ? lineItem
+        : {
+            ...lineItem,
+            memberPaymentAmount,
+          };
+    });
+  }
+
+  /**
    * Calculates a copilot-safe member-payment amount from a billing ledger amount.
    *
-   * Billing locked and consumed rows store the member payment plus its markup
-   * fee. This reverses that ledger amount while keeping the raw billing markup
-   * on the server. A zero markup means the full amount is a member payment.
+   * Billing rows that store member payments plus their markup fee can be
+   * reversed with this helper while keeping raw markup math on the server. A
+   * zero markup means the full amount is a member payment. Billing-account
+   * markup is stored as the direct multiplier used by finance and ledger math,
+   * so values greater than `1` are valid and are not percentage-normalized.
    *
    * @param billingAccountAmount Billing ledger amount that includes markup.
-   * @param markup Billing-account markup from persistence.
+   * @param markup Billing or challenge markup from persistence.
    * @returns Rounded member-payment amount, or `undefined` when inputs are invalid.
    */
   private calculateMemberPaymentAmount(
@@ -1272,24 +1372,22 @@ export class BillingAccountsService {
       return undefined;
     }
 
-    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
-
-    if (normalizedMarkup < 0) {
+    if (rawMarkup < 0) {
       return undefined;
     }
 
-    if (normalizedMarkup === 0) {
+    if (rawMarkup === 0) {
       return Number(amount.toFixed(2));
     }
 
-    return Number((amount / (1 + normalizedMarkup)).toFixed(2));
+    return Number((amount / (1 + rawMarkup)).toFixed(2));
   }
 
   /**
    * Calculates the copilot-safe member-payment capacity for a billing account.
    *
-   * Remaining capacity applies the markup as a direct reduction from the
-   * current remaining budget: total remaining - (total remaining * markup).
+   * Remaining capacity reverses the billing-account markup from the current
+   * remaining budget using the same multiplier contract as line items.
    *
    * @param totalBudgetRemaining Current remaining billing-account budget.
    * @param markup Billing-account markup from persistence.
@@ -1306,23 +1404,22 @@ export class BillingAccountsService {
       return undefined;
     }
 
-    const normalizedMarkup = rawMarkup > 1 ? rawMarkup / 100 : rawMarkup;
-
-    if (normalizedMarkup < 0) {
+    if (rawMarkup < 0) {
       return undefined;
     }
 
-    return Number(
-      (totalRemaining - totalRemaining * normalizedMarkup).toFixed(2),
-    );
+    return this.calculateMemberPaymentAmount(totalRemaining, rawMarkup);
   }
 
   /**
-   * Adds copilot-safe member-payment display amounts to budget line items.
+   * Ensures copilot-safe member-payment display amounts exist on budget line items.
    *
    * @param lineItems Serialized locked or consumed line items.
    * @param markup Billing-account markup from persistence.
    * @returns Line items with `memberPaymentAmount` when it can be calculated.
+   * @remarks Detail responses precompute member-payment subtotals with
+   * challenge-specific markup. This fallback preserves those exact values and
+   * only calculates missing values for older response shapes.
    */
   private serializeLineItemsForCopilot(
     lineItems: BudgetLineItemResponse[] | undefined,
@@ -1333,6 +1430,10 @@ export class BillingAccountsService {
     }
 
     return lineItems.map((lineItem) => {
+      if (lineItem.memberPaymentAmount !== undefined) {
+        return lineItem;
+      }
+
       const memberPaymentAmount = this.calculateMemberPaymentAmount(
         lineItem.amount,
         markup,

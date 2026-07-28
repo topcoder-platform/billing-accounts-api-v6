@@ -10,7 +10,7 @@ echo "Starting Billing Accounts API v6..."
 
 echo "Running database migrations..."
 
-npx prisma migrate deploy
+/usr/src/app/node_modules/.bin/prisma migrate deploy
 
 # Check migration status
 if [ $? -eq 0 ]; then
