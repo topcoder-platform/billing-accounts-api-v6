@@ -54,6 +54,8 @@
 
 ## Quickstart
 
+Requires Node.js 26.5.1, matching `.nvmrc` and the production container.
+
 ```bash
 cp .env.example .env
 # edit .env and set DATABASE_URL, auth vars, etc.
