@@ -1,7 +1,9 @@
 # ---- Base Stage ----
 FROM alpine:3.24 AS base
 RUN apk upgrade --no-cache \
-  && apk add --no-cache nodejs-current=26.5.1-r0
+  && apk add --no-cache nodejs-current=26.5.1-r0 \
+  && addgroup -S -g 10001 app \
+  && adduser -S -D -u 10001 -G app -h /home/app app
 WORKDIR /usr/src/app
 
 # ---- Tooling Stage ----
@@ -31,14 +33,16 @@ RUN pnpm install --prod --frozen-lockfile --ignore-scripts \
 # ---- Production Stage ----
 FROM base AS production
 ENV NODE_ENV=production
+ENV HOME=/home/app
 WORKDIR /usr/src/app
 
 # Copy built artifacts and runtime deps
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=prod-deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/prisma ./prisma
-COPY --from=build /usr/src/app/entrypoint.sh /entrypoint.sh
+COPY --chown=app:app --from=build /usr/src/app/dist ./dist
+COPY --chown=app:app --from=prod-deps /usr/src/app/node_modules ./node_modules
+COPY --chown=app:app --from=build /usr/src/app/prisma ./prisma
+COPY --chown=app:app --from=build /usr/src/app/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
 
+USER 10001:10001
 ENTRYPOINT ["/entrypoint.sh"]

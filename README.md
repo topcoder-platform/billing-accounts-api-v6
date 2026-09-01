@@ -55,6 +55,8 @@
 ## Quickstart
 
 Requires Node.js 26.5.1, matching `.nvmrc` and the production container.
+The production container runs as the unprivileged `app` user with UID and GID
+`10001`; database migrations and the API process use that identity.
 
 ```bash
 cp .env.example .env
