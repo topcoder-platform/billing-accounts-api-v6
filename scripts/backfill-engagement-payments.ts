@@ -1875,7 +1875,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  console.error(error);
+main().catch(() => {
+  // Prisma failures can include connection URLs sourced from the environment.
+  console.error(
+    'Engagement payment backfill failed; review database connectivity and configuration.',
+  );
   process.exit(1);
 });
