@@ -5,6 +5,7 @@ import { AuthMiddleware } from "./auth/auth.middleware";
 import { BillingAccountsModule } from "./billing-accounts/billing-accounts.module";
 import { ClientsModule } from "./clients/clients.module";
 import { HealthModule } from "./health/health.module";
+import { SalesforceSyncModule } from "./salesforce-sync/salesforce-sync.module";
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { HealthModule } from "./health/health.module";
     HealthModule,
     BillingAccountsModule,
     ClientsModule,
+    SalesforceSyncModule,
   ],
 })
 export class AppModule implements NestModule {
