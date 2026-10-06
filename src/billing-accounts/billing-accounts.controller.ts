@@ -101,6 +101,12 @@ export class BillingAccountsController {
     description: "Filter by name (contains, case-insensitive)",
   })
   @ApiQuery({ name: "clientId", required: false })
+  @ApiQuery({
+    name: "opportunity",
+    required: false,
+    description:
+      "Salesforce opportunity ID (15 or 18 characters); both forms match the same accounts, including inactive accounts unless status is filtered.",
+  })
   @ApiQuery({ name: "userId", required: false })
   @ApiQuery({ name: "status", required: false, enum: ["ACTIVE", "INACTIVE"] })
   @ApiQuery({ name: "startDateFrom", required: false, type: String })

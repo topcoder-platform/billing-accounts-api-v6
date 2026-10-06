@@ -396,10 +396,13 @@ export class BillingAccountsService {
    *
    * Project-scoped callers are constrained to billing accounts granted to
    * their own `userId`, regardless of an explicit `userId` query override.
+   * Opportunity matching uses the case-sensitive first 15 characters so both
+   * Salesforce ID forms resolve the same accounts, including inactive accounts.
    *
    * @param q Query filters and pagination controls.
    * @param authUser Authenticated caller context from `req.authUser`.
    * @returns Paginated billing-account result set.
+   * @throws Propagates database errors to the global Prisma exception filter.
    */
   async list(q: QueryBillingAccountsDto, authUser?: BillingAccountsAuthUser) {
     const {
@@ -407,6 +410,7 @@ export class BillingAccountsService {
       userId,
       status,
       name,
+      opportunity,
       startDateFrom,
       startDateTo,
       endDateFrom,
@@ -444,6 +448,10 @@ export class BillingAccountsService {
 
     if (name) {
       where.name = { contains: name, mode: "insensitive" } as any;
+    }
+
+    if (opportunity) {
+      where.opportunity = { startsWith: opportunity.slice(0, 15) };
     }
 
     if (startDateFrom || startDateTo) {
