@@ -109,7 +109,16 @@ client. `GET /billing-accounts/users/:userId` retains Salesforce membership and
 summary values, adding stored billing metadata and the client for matching local
 accounts. Unmatched Salesforce summaries remain unchanged. This enrichment does
 not expose raw markup. Access-grant and budget-ledger endpoints retain their
-existing specialized response shapes. Existing list filters are unchanged.
+existing specialized response shapes.
+
+`GET /v6/billing-accounts?opportunity={salesforceOpportunityId}` filters the
+`BillingAccount.opportunity` column. It accepts a 15- or 18-character Salesforce
+opportunity ID (the `006` prefix) and matches the case-sensitive first 15
+characters so legacy and full IDs resolve the same accounts. It composes with
+existing access restrictions, filters, sorting, and pagination. Inactive
+accounts are included unless `status` is specified. Projects API uses this
+filter to resolve the current account and project for the Sales opportunity
+popup. Deploy this filter before the Projects API opportunity enrichment.
 
 `accountStatus` is CRM metadata, separate from `status` (`ACTIVE`/`INACTIVE`).
 Client `paymentTerms` is separate from billing-account `paymentTerms`.

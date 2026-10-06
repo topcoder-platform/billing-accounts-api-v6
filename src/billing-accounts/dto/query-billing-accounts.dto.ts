@@ -4,15 +4,21 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   Min,
 } from "class-validator";
 import { Transform } from "class-transformer";
 
+/** Validated filters and pagination for the billing-account listing endpoint. */
 export class QueryBillingAccountsDto {
   @IsOptional() @IsString() clientId?: string;
   @IsOptional() @IsString() userId?: string;
   @IsOptional() @IsIn(["ACTIVE", "INACTIVE"]) status?: "ACTIVE" | "INACTIVE";
   @IsOptional() @IsString() name?: string;
+  @IsOptional()
+  @IsString()
+  @Matches(/^006[A-Za-z0-9]{12}(?:[A-Za-z0-9]{3})?$/)
+  opportunity?: string;
 
   // Date range filters (UI sends From/To as the same day)
   @IsOptional() @IsDateString() startDateFrom?: string;
