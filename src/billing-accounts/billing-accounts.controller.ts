@@ -137,7 +137,7 @@ export class BillingAccountsController {
     buildOperationDoc({
       summary: "Create a billing account",
       description:
-        "Create a new billing account with the provided project and budget details.",
+        "Create a new billing account with project, budget, and optional nullable Salesforce metadata fields.",
       jwtRoles: BILLING_ACCOUNT_MANAGE_ROLES,
       m2mScopes: [SCOPES.CREATE_BA, SCOPES.ALL_BA],
     }),
@@ -156,7 +156,7 @@ export class BillingAccountsController {
     buildOperationDoc({
       summary: "List billing accounts accessible by user",
       description:
-        "Retrieve billing accounts that the given user ID has access to (via Salesforce).",
+        "Retrieve billing accounts that the given user ID has access to via Salesforce, enriched with local Salesforce metadata and client details when a matching local account exists.",
       jwtRoles: [ADMIN_ROLE, COPILOT_ROLE],
       m2mScopes: [SCOPES.READ_BA, SCOPES.ALL_BA],
     }),
@@ -204,7 +204,8 @@ export class BillingAccountsController {
   @ApiOperation(
     buildOperationDoc({
       summary: "Update a billing account",
-      description: "Update billing account metadata or budget details.",
+      description:
+        "Update billing account metadata or budget details. Omit Salesforce metadata fields to preserve them, or send null to clear them.",
       jwtRoles: BILLING_ACCOUNT_MANAGE_ROLES,
       m2mScopes: [SCOPES.UPDATE_BA, SCOPES.ALL_BA],
     }),

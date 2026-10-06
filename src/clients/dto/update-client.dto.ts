@@ -1,7 +1,8 @@
+import { ClientSalesforceMetadataDto } from "./salesforce-metadata.dto";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { IsDateString, IsIn, IsOptional, IsString } from "class-validator";
 
-export class UpdateClientDto {
+export class UpdateClientDto extends ClientSalesforceMetadataDto {
   @ApiPropertyOptional({ example: "Acme Corporation" })
   @IsOptional()
   @IsString()

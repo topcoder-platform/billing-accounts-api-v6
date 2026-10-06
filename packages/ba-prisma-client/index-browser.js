@@ -122,6 +122,18 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 });
 
 exports.Prisma.ClientScalarFieldEnum = {
+  salesforceAccountId: 'salesforceAccountId',
+  accountStatus: 'accountStatus',
+  billingStreet: 'billingStreet',
+  billingCity: 'billingCity',
+  billingState: 'billingState',
+  billingPostalCode: 'billingPostalCode',
+  billingCountry: 'billingCountry',
+  phone: 'phone',
+  website: 'website',
+  industry: 'industry',
+  parentId: 'parentId',
+  paymentTerms: 'paymentTerms',
   id: 'id',
   name: 'name',
   codeName: 'codeName',
@@ -133,6 +145,16 @@ exports.Prisma.ClientScalarFieldEnum = {
 };
 
 exports.Prisma.BillingAccountScalarFieldEnum = {
+  salesforceBillingAccountId: 'salesforceBillingAccountId',
+  billingAccountType: 'billingAccountType',
+  billingNotes: 'billingNotes',
+  billingFrequency: 'billingFrequency',
+  opportunity: 'opportunity',
+  subscription: 'subscription',
+  spoc: 'spoc',
+  secondarySpoc: 'secondarySpoc',
+  costCenter: 'costCenter',
+  workdayContractNumber: 'workdayContractNumber',
   id: 'id',
   projectId: 'projectId',
   name: 'name',

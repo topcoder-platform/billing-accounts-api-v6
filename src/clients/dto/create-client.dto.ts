@@ -1,3 +1,4 @@
+import { ClientSalesforceMetadataDto } from "./salesforce-metadata.dto";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsDateString,
@@ -8,7 +9,7 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 
-export class CreateClientDto {
+export class CreateClientDto extends ClientSalesforceMetadataDto {
   @ApiProperty({ example: "Acme Corporation" })
   @IsString()
   name!: string;
@@ -37,6 +38,7 @@ export class CreateClientDto {
 export class CreateClientRequestDto {
   // Request body shape: { "param": { ...CreateClientDto } }
   @ApiProperty({
+    type: CreateClientDto,
     example: {
       param: {
         name: "Acme Corporation",
