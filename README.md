@@ -71,6 +71,65 @@ pnpm run dev
 pnpm run build && pnpm start
 ```
 
+## Client and billing-account metadata
+
+The Prisma schema matches the nullable Salesforce metadata columns verified in
+production on 2026-10-06. Migration `20260928000000_add_salesforce_metadata` is
+already recorded in production; the restored migration file has the same checksum.
+Use the normal migration deployment on environments that have not applied it.
+
+| Model | Additional fields |
+| --- | --- |
+| Client | `salesforceAccountId`, `accountStatus`, `billingStreet`, `billingCity`, `billingState`, `billingPostalCode`, `billingCountry`, `phone`, `website`, `industry`, `parentId`, `paymentTerms` |
+| BillingAccount | `salesforceBillingAccountId`, `billingAccountType`, `billingNotes`, `billingFrequency`, `opportunity`, `subscription`, `spoc`, `secondarySpoc`, `costCenter`, `workdayContractNumber` |
+
+All fields are optional strings. POST and PATCH accept them; PATCH preserves
+omitted fields and clears fields explicitly set to `null`. Salesforce reference
+IDs must be 18 alphanumeric characters. DTO length limits match the database's
+VARCHAR limits; billing notes allow up to 32,768 characters. Salesforce account
+and billing-account IDs are unique when populated; conflicts return HTTP 409.
+
+Client POST keeps its `{ "param": { ... } }` wrapper; client PATCH and both
+billing-account writes use a flat body. For example:
+
+```json
+{
+  "param": {
+    "name": "Example client",
+    "salesforceAccountId": "001000000000001AAA",
+    "billingCity": "Hobart",
+    "paymentTerms": "Net 30"
+  }
+}
+```
+
+Client and billing-account list, detail, create, and update responses include the
+stored metadata. Billing-account list/detail also include it in their nested
+client. `GET /billing-accounts/users/:userId` retains Salesforce membership and
+summary values, adding stored billing metadata and the client for matching local
+accounts. Unmatched Salesforce summaries remain unchanged. This enrichment does
+not expose raw markup. Access-grant and budget-ledger endpoints retain their
+existing specialized response shapes. Existing list filters are unchanged.
+
+`accountStatus` is CRM metadata, separate from `status` (`ACTIVE`/`INACTIVE`).
+Client `paymentTerms` is separate from billing-account `paymentTerms`.
+`subscription` is a Salesforce reference, separate from `subscriptionNumber`;
+`billingNotes` is separate from `description`. These references, including
+`parentId`, are Salesforce IDs, not local foreign keys.
+
+For regression checks, run `pnpm build && pnpm test:metadata`. Database/API tests
+require `TEST_DATABASE_URL` pointing to a disposable local PostgreSQL database
+whose name ends in `_test`, with all migrations applied. They use a temporary
+HTTP server with test authentication and a stubbed Salesforce lookup; no
+production or Salesforce writes are made. For example, after configuring a local
+PostgreSQL instance:
+
+```bash
+export TEST_DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:5432/billing_metadata_test?schema=billing-accounts'
+DATABASE_URL="$TEST_DATABASE_URL" pnpm exec prisma migrate deploy
+pnpm test:metadata
+```
+
 ## Salesforce integration
 
 - This service can resolve billing accounts a user has access to via Salesforce. To enable Salesforce calls, configure the following environment variables in `.env` (see `.env.example`):

@@ -16,6 +16,20 @@ datasource db {
 }
 
 model Client {
+  // Salesforce metadata; nullable for legacy and locally created records.
+  salesforceAccountId String? @unique @db.VarChar(18)
+  accountStatus       String? @db.VarChar(255)
+  billingStreet       String? @db.VarChar(255)
+  billingCity         String? @db.VarChar(40)
+  billingState        String? @db.VarChar(80)
+  billingPostalCode   String? @db.VarChar(20)
+  billingCountry      String? @db.VarChar(80)
+  phone               String? @db.VarChar(40)
+  website             String? @db.VarChar(255)
+  industry            String? @db.VarChar(255)
+  parentId            String? @db.VarChar(18)
+  paymentTerms        String? @db.VarChar(255)
+
   id        String       @id @default(uuid())
   name      String
   codeName  String?      @db.VarChar(255) // customer number / internal code
@@ -39,6 +53,18 @@ enum ClientStatus {
 }
 
 model BillingAccount {
+  // Salesforce metadata; nullable for legacy and locally created records.
+  salesforceBillingAccountId String? @unique @db.VarChar(18)
+  billingAccountType         String? @db.VarChar(255)
+  billingNotes               String? @db.Text
+  billingFrequency           String? @db.VarChar(255)
+  opportunity                String? @db.VarChar(18)
+  subscription               String? @db.VarChar(18)
+  spoc                       String? @db.VarChar(18)
+  secondarySpoc              String? @db.VarChar(18)
+  costCenter                 String? @db.VarChar(255)
+  workdayContractNumber      String? @db.VarChar(255)
+
   id                        Int       @id @default(autoincrement())
   projectId                 String?
   name                      String

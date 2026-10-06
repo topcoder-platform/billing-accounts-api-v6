@@ -1356,6 +1356,18 @@ export namespace Prisma {
   }
 
   export type ClientMinAggregateOutputType = {
+    salesforceAccountId: string | null
+    accountStatus: string | null
+    billingStreet: string | null
+    billingCity: string | null
+    billingState: string | null
+    billingPostalCode: string | null
+    billingCountry: string | null
+    phone: string | null
+    website: string | null
+    industry: string | null
+    parentId: string | null
+    paymentTerms: string | null
     id: string | null
     name: string | null
     codeName: string | null
@@ -1367,6 +1379,18 @@ export namespace Prisma {
   }
 
   export type ClientMaxAggregateOutputType = {
+    salesforceAccountId: string | null
+    accountStatus: string | null
+    billingStreet: string | null
+    billingCity: string | null
+    billingState: string | null
+    billingPostalCode: string | null
+    billingCountry: string | null
+    phone: string | null
+    website: string | null
+    industry: string | null
+    parentId: string | null
+    paymentTerms: string | null
     id: string | null
     name: string | null
     codeName: string | null
@@ -1378,6 +1402,18 @@ export namespace Prisma {
   }
 
   export type ClientCountAggregateOutputType = {
+    salesforceAccountId: number
+    accountStatus: number
+    billingStreet: number
+    billingCity: number
+    billingState: number
+    billingPostalCode: number
+    billingCountry: number
+    phone: number
+    website: number
+    industry: number
+    parentId: number
+    paymentTerms: number
     id: number
     name: number
     codeName: number
@@ -1391,6 +1427,18 @@ export namespace Prisma {
 
 
   export type ClientMinAggregateInputType = {
+    salesforceAccountId?: true
+    accountStatus?: true
+    billingStreet?: true
+    billingCity?: true
+    billingState?: true
+    billingPostalCode?: true
+    billingCountry?: true
+    phone?: true
+    website?: true
+    industry?: true
+    parentId?: true
+    paymentTerms?: true
     id?: true
     name?: true
     codeName?: true
@@ -1402,6 +1450,18 @@ export namespace Prisma {
   }
 
   export type ClientMaxAggregateInputType = {
+    salesforceAccountId?: true
+    accountStatus?: true
+    billingStreet?: true
+    billingCity?: true
+    billingState?: true
+    billingPostalCode?: true
+    billingCountry?: true
+    phone?: true
+    website?: true
+    industry?: true
+    parentId?: true
+    paymentTerms?: true
     id?: true
     name?: true
     codeName?: true
@@ -1413,6 +1473,18 @@ export namespace Prisma {
   }
 
   export type ClientCountAggregateInputType = {
+    salesforceAccountId?: true
+    accountStatus?: true
+    billingStreet?: true
+    billingCity?: true
+    billingState?: true
+    billingPostalCode?: true
+    billingCountry?: true
+    phone?: true
+    website?: true
+    industry?: true
+    parentId?: true
+    paymentTerms?: true
     id?: true
     name?: true
     codeName?: true
@@ -1497,6 +1569,18 @@ export namespace Prisma {
   }
 
   export type ClientGroupByOutputType = {
+    salesforceAccountId: string | null
+    accountStatus: string | null
+    billingStreet: string | null
+    billingCity: string | null
+    billingState: string | null
+    billingPostalCode: string | null
+    billingCountry: string | null
+    phone: string | null
+    website: string | null
+    industry: string | null
+    parentId: string | null
+    paymentTerms: string | null
     id: string
     name: string
     codeName: string | null
@@ -1525,6 +1609,18 @@ export namespace Prisma {
 
 
   export type ClientSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    salesforceAccountId?: boolean
+    accountStatus?: boolean
+    billingStreet?: boolean
+    billingCity?: boolean
+    billingState?: boolean
+    billingPostalCode?: boolean
+    billingCountry?: boolean
+    phone?: boolean
+    website?: boolean
+    industry?: boolean
+    parentId?: boolean
+    paymentTerms?: boolean
     id?: boolean
     name?: boolean
     codeName?: boolean
@@ -1538,6 +1634,18 @@ export namespace Prisma {
   }, ExtArgs["result"]["client"]>
 
   export type ClientSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    salesforceAccountId?: boolean
+    accountStatus?: boolean
+    billingStreet?: boolean
+    billingCity?: boolean
+    billingState?: boolean
+    billingPostalCode?: boolean
+    billingCountry?: boolean
+    phone?: boolean
+    website?: boolean
+    industry?: boolean
+    parentId?: boolean
+    paymentTerms?: boolean
     id?: boolean
     name?: boolean
     codeName?: boolean
@@ -1549,6 +1657,18 @@ export namespace Prisma {
   }, ExtArgs["result"]["client"]>
 
   export type ClientSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    salesforceAccountId?: boolean
+    accountStatus?: boolean
+    billingStreet?: boolean
+    billingCity?: boolean
+    billingState?: boolean
+    billingPostalCode?: boolean
+    billingCountry?: boolean
+    phone?: boolean
+    website?: boolean
+    industry?: boolean
+    parentId?: boolean
+    paymentTerms?: boolean
     id?: boolean
     name?: boolean
     codeName?: boolean
@@ -1560,6 +1680,18 @@ export namespace Prisma {
   }, ExtArgs["result"]["client"]>
 
   export type ClientSelectScalar = {
+    salesforceAccountId?: boolean
+    accountStatus?: boolean
+    billingStreet?: boolean
+    billingCity?: boolean
+    billingState?: boolean
+    billingPostalCode?: boolean
+    billingCountry?: boolean
+    phone?: boolean
+    website?: boolean
+    industry?: boolean
+    parentId?: boolean
+    paymentTerms?: boolean
     id?: boolean
     name?: boolean
     codeName?: boolean
@@ -1570,7 +1702,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ClientOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "codeName" | "status" | "startDate" | "endDate" | "createdAt" | "updatedAt", ExtArgs["result"]["client"]>
+  export type ClientOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"salesforceAccountId" | "accountStatus" | "billingStreet" | "billingCity" | "billingState" | "billingPostalCode" | "billingCountry" | "phone" | "website" | "industry" | "parentId" | "paymentTerms" | "id" | "name" | "codeName" | "status" | "startDate" | "endDate" | "createdAt" | "updatedAt", ExtArgs["result"]["client"]>
   export type ClientInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     billingAccounts?: boolean | Client$billingAccountsArgs<ExtArgs>
     _count?: boolean | ClientCountOutputTypeDefaultArgs<ExtArgs>
@@ -1584,6 +1716,18 @@ export namespace Prisma {
       billingAccounts: Prisma.$BillingAccountPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
+      salesforceAccountId: string | null
+      accountStatus: string | null
+      billingStreet: string | null
+      billingCity: string | null
+      billingState: string | null
+      billingPostalCode: string | null
+      billingCountry: string | null
+      phone: string | null
+      website: string | null
+      industry: string | null
+      parentId: string | null
+      paymentTerms: string | null
       id: string
       name: string
       codeName: string | null
@@ -1675,8 +1819,8 @@ export namespace Prisma {
      * // Get first 10 Clients
      * const clients = await prisma.client.findMany({ take: 10 })
      * 
-     * // Only select the `id`
-     * const clientWithIdOnly = await prisma.client.findMany({ select: { id: true } })
+     * // Only select the `salesforceAccountId`
+     * const clientWithSalesforceAccountIdOnly = await prisma.client.findMany({ select: { salesforceAccountId: true } })
      * 
      */
     findMany<T extends ClientFindManyArgs>(args?: SelectSubset<T, ClientFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -1720,9 +1864,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Create many Clients and only return the `id`
-     * const clientWithIdOnly = await prisma.client.createManyAndReturn({
-     *   select: { id: true },
+     * // Create many Clients and only return the `salesforceAccountId`
+     * const clientWithSalesforceAccountIdOnly = await prisma.client.createManyAndReturn({
+     *   select: { salesforceAccountId: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -1811,9 +1955,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more Clients and only return the `id`
-     * const clientWithIdOnly = await prisma.client.updateManyAndReturn({
-     *   select: { id: true },
+     * // Update zero or more Clients and only return the `salesforceAccountId`
+     * const clientWithSalesforceAccountIdOnly = await prisma.client.updateManyAndReturn({
+     *   select: { salesforceAccountId: true },
      *   where: {
      *     // ... provide filter here
      *   },
@@ -2016,6 +2160,18 @@ export namespace Prisma {
    * Fields of the Client model
    */
   interface ClientFieldRefs {
+    readonly salesforceAccountId: FieldRef<"Client", 'String'>
+    readonly accountStatus: FieldRef<"Client", 'String'>
+    readonly billingStreet: FieldRef<"Client", 'String'>
+    readonly billingCity: FieldRef<"Client", 'String'>
+    readonly billingState: FieldRef<"Client", 'String'>
+    readonly billingPostalCode: FieldRef<"Client", 'String'>
+    readonly billingCountry: FieldRef<"Client", 'String'>
+    readonly phone: FieldRef<"Client", 'String'>
+    readonly website: FieldRef<"Client", 'String'>
+    readonly industry: FieldRef<"Client", 'String'>
+    readonly parentId: FieldRef<"Client", 'String'>
+    readonly paymentTerms: FieldRef<"Client", 'String'>
     readonly id: FieldRef<"Client", 'String'>
     readonly name: FieldRef<"Client", 'String'>
     readonly codeName: FieldRef<"Client", 'String'>
@@ -2481,6 +2637,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountMinAggregateOutputType = {
+    salesforceBillingAccountId: string | null
+    billingAccountType: string | null
+    billingNotes: string | null
+    billingFrequency: string | null
+    opportunity: string | null
+    subscription: string | null
+    spoc: string | null
+    secondarySpoc: string | null
+    costCenter: string | null
+    workdayContractNumber: string | null
     id: number | null
     projectId: string | null
     name: string | null
@@ -2504,6 +2670,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountMaxAggregateOutputType = {
+    salesforceBillingAccountId: string | null
+    billingAccountType: string | null
+    billingNotes: string | null
+    billingFrequency: string | null
+    opportunity: string | null
+    subscription: string | null
+    spoc: string | null
+    secondarySpoc: string | null
+    costCenter: string | null
+    workdayContractNumber: string | null
     id: number | null
     projectId: string | null
     name: string | null
@@ -2527,6 +2703,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCountAggregateOutputType = {
+    salesforceBillingAccountId: number
+    billingAccountType: number
+    billingNotes: number
+    billingFrequency: number
+    opportunity: number
+    subscription: number
+    spoc: number
+    secondarySpoc: number
+    costCenter: number
+    workdayContractNumber: number
     id: number
     projectId: number
     name: number
@@ -2566,6 +2752,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountMinAggregateInputType = {
+    salesforceBillingAccountId?: true
+    billingAccountType?: true
+    billingNotes?: true
+    billingFrequency?: true
+    opportunity?: true
+    subscription?: true
+    spoc?: true
+    secondarySpoc?: true
+    costCenter?: true
+    workdayContractNumber?: true
     id?: true
     projectId?: true
     name?: true
@@ -2589,6 +2785,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountMaxAggregateInputType = {
+    salesforceBillingAccountId?: true
+    billingAccountType?: true
+    billingNotes?: true
+    billingFrequency?: true
+    opportunity?: true
+    subscription?: true
+    spoc?: true
+    secondarySpoc?: true
+    costCenter?: true
+    workdayContractNumber?: true
     id?: true
     projectId?: true
     name?: true
@@ -2612,6 +2818,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCountAggregateInputType = {
+    salesforceBillingAccountId?: true
+    billingAccountType?: true
+    billingNotes?: true
+    billingFrequency?: true
+    opportunity?: true
+    subscription?: true
+    spoc?: true
+    secondarySpoc?: true
+    costCenter?: true
+    workdayContractNumber?: true
     id?: true
     projectId?: true
     name?: true
@@ -2722,6 +2938,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountGroupByOutputType = {
+    salesforceBillingAccountId: string | null
+    billingAccountType: string | null
+    billingNotes: string | null
+    billingFrequency: string | null
+    opportunity: string | null
+    subscription: string | null
+    spoc: string | null
+    secondarySpoc: string | null
+    costCenter: string | null
+    workdayContractNumber: string | null
     id: number
     projectId: string | null
     name: string
@@ -2764,6 +2990,16 @@ export namespace Prisma {
 
 
   export type BillingAccountSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    salesforceBillingAccountId?: boolean
+    billingAccountType?: boolean
+    billingNotes?: boolean
+    billingFrequency?: boolean
+    opportunity?: boolean
+    subscription?: boolean
+    spoc?: boolean
+    secondarySpoc?: boolean
+    costCenter?: boolean
+    workdayContractNumber?: boolean
     id?: boolean
     projectId?: boolean
     name?: boolean
@@ -2792,6 +3028,16 @@ export namespace Prisma {
   }, ExtArgs["result"]["billingAccount"]>
 
   export type BillingAccountSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    salesforceBillingAccountId?: boolean
+    billingAccountType?: boolean
+    billingNotes?: boolean
+    billingFrequency?: boolean
+    opportunity?: boolean
+    subscription?: boolean
+    spoc?: boolean
+    secondarySpoc?: boolean
+    costCenter?: boolean
+    workdayContractNumber?: boolean
     id?: boolean
     projectId?: boolean
     name?: boolean
@@ -2816,6 +3062,16 @@ export namespace Prisma {
   }, ExtArgs["result"]["billingAccount"]>
 
   export type BillingAccountSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    salesforceBillingAccountId?: boolean
+    billingAccountType?: boolean
+    billingNotes?: boolean
+    billingFrequency?: boolean
+    opportunity?: boolean
+    subscription?: boolean
+    spoc?: boolean
+    secondarySpoc?: boolean
+    costCenter?: boolean
+    workdayContractNumber?: boolean
     id?: boolean
     projectId?: boolean
     name?: boolean
@@ -2840,6 +3096,16 @@ export namespace Prisma {
   }, ExtArgs["result"]["billingAccount"]>
 
   export type BillingAccountSelectScalar = {
+    salesforceBillingAccountId?: boolean
+    billingAccountType?: boolean
+    billingNotes?: boolean
+    billingFrequency?: boolean
+    opportunity?: boolean
+    subscription?: boolean
+    spoc?: boolean
+    secondarySpoc?: boolean
+    costCenter?: boolean
+    workdayContractNumber?: boolean
     id?: boolean
     projectId?: boolean
     name?: boolean
@@ -2862,7 +3128,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type BillingAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "projectId" | "name" | "description" | "subcontractingEndCustomer" | "status" | "startDate" | "endDate" | "budget" | "markup" | "clientId" | "poNumber" | "subscriptionNumber" | "isManualPrize" | "paymentTerms" | "salesTax" | "billable" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["billingAccount"]>
+  export type BillingAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"salesforceBillingAccountId" | "billingAccountType" | "billingNotes" | "billingFrequency" | "opportunity" | "subscription" | "spoc" | "secondarySpoc" | "costCenter" | "workdayContractNumber" | "id" | "projectId" | "name" | "description" | "subcontractingEndCustomer" | "status" | "startDate" | "endDate" | "budget" | "markup" | "clientId" | "poNumber" | "subscriptionNumber" | "isManualPrize" | "paymentTerms" | "salesTax" | "billable" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["billingAccount"]>
   export type BillingAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     client?: boolean | ClientDefaultArgs<ExtArgs>
     lockedAmounts?: boolean | BillingAccount$lockedAmountsArgs<ExtArgs>
@@ -2886,6 +3152,16 @@ export namespace Prisma {
       accessGrants: Prisma.$BillingAccountAccessPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
+      salesforceBillingAccountId: string | null
+      billingAccountType: string | null
+      billingNotes: string | null
+      billingFrequency: string | null
+      opportunity: string | null
+      subscription: string | null
+      spoc: string | null
+      secondarySpoc: string | null
+      costCenter: string | null
+      workdayContractNumber: string | null
       id: number
       projectId: string | null
       name: string
@@ -2989,8 +3265,8 @@ export namespace Prisma {
      * // Get first 10 BillingAccounts
      * const billingAccounts = await prisma.billingAccount.findMany({ take: 10 })
      * 
-     * // Only select the `id`
-     * const billingAccountWithIdOnly = await prisma.billingAccount.findMany({ select: { id: true } })
+     * // Only select the `salesforceBillingAccountId`
+     * const billingAccountWithSalesforceBillingAccountIdOnly = await prisma.billingAccount.findMany({ select: { salesforceBillingAccountId: true } })
      * 
      */
     findMany<T extends BillingAccountFindManyArgs>(args?: SelectSubset<T, BillingAccountFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BillingAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
@@ -3034,9 +3310,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Create many BillingAccounts and only return the `id`
-     * const billingAccountWithIdOnly = await prisma.billingAccount.createManyAndReturn({
-     *   select: { id: true },
+     * // Create many BillingAccounts and only return the `salesforceBillingAccountId`
+     * const billingAccountWithSalesforceBillingAccountIdOnly = await prisma.billingAccount.createManyAndReturn({
+     *   select: { salesforceBillingAccountId: true },
      *   data: [
      *     // ... provide data here
      *   ]
@@ -3125,9 +3401,9 @@ export namespace Prisma {
      *   ]
      * })
      * 
-     * // Update zero or more BillingAccounts and only return the `id`
-     * const billingAccountWithIdOnly = await prisma.billingAccount.updateManyAndReturn({
-     *   select: { id: true },
+     * // Update zero or more BillingAccounts and only return the `salesforceBillingAccountId`
+     * const billingAccountWithSalesforceBillingAccountIdOnly = await prisma.billingAccount.updateManyAndReturn({
+     *   select: { salesforceBillingAccountId: true },
      *   where: {
      *     // ... provide filter here
      *   },
@@ -3333,6 +3609,16 @@ export namespace Prisma {
    * Fields of the BillingAccount model
    */
   interface BillingAccountFieldRefs {
+    readonly salesforceBillingAccountId: FieldRef<"BillingAccount", 'String'>
+    readonly billingAccountType: FieldRef<"BillingAccount", 'String'>
+    readonly billingNotes: FieldRef<"BillingAccount", 'String'>
+    readonly billingFrequency: FieldRef<"BillingAccount", 'String'>
+    readonly opportunity: FieldRef<"BillingAccount", 'String'>
+    readonly subscription: FieldRef<"BillingAccount", 'String'>
+    readonly spoc: FieldRef<"BillingAccount", 'String'>
+    readonly secondarySpoc: FieldRef<"BillingAccount", 'String'>
+    readonly costCenter: FieldRef<"BillingAccount", 'String'>
+    readonly workdayContractNumber: FieldRef<"BillingAccount", 'String'>
     readonly id: FieldRef<"BillingAccount", 'Int'>
     readonly projectId: FieldRef<"BillingAccount", 'String'>
     readonly name: FieldRef<"BillingAccount", 'String'>
@@ -7177,6 +7463,18 @@ export namespace Prisma {
 
 
   export const ClientScalarFieldEnum: {
+    salesforceAccountId: 'salesforceAccountId',
+    accountStatus: 'accountStatus',
+    billingStreet: 'billingStreet',
+    billingCity: 'billingCity',
+    billingState: 'billingState',
+    billingPostalCode: 'billingPostalCode',
+    billingCountry: 'billingCountry',
+    phone: 'phone',
+    website: 'website',
+    industry: 'industry',
+    parentId: 'parentId',
+    paymentTerms: 'paymentTerms',
     id: 'id',
     name: 'name',
     codeName: 'codeName',
@@ -7191,6 +7489,16 @@ export namespace Prisma {
 
 
   export const BillingAccountScalarFieldEnum: {
+    salesforceBillingAccountId: 'salesforceBillingAccountId',
+    billingAccountType: 'billingAccountType',
+    billingNotes: 'billingNotes',
+    billingFrequency: 'billingFrequency',
+    opportunity: 'opportunity',
+    subscription: 'subscription',
+    spoc: 'spoc',
+    secondarySpoc: 'secondarySpoc',
+    costCenter: 'costCenter',
+    workdayContractNumber: 'workdayContractNumber',
     id: 'id',
     projectId: 'projectId',
     name: 'name',
@@ -7407,6 +7715,18 @@ export namespace Prisma {
     AND?: ClientWhereInput | ClientWhereInput[]
     OR?: ClientWhereInput[]
     NOT?: ClientWhereInput | ClientWhereInput[]
+    salesforceAccountId?: StringNullableFilter<"Client"> | string | null
+    accountStatus?: StringNullableFilter<"Client"> | string | null
+    billingStreet?: StringNullableFilter<"Client"> | string | null
+    billingCity?: StringNullableFilter<"Client"> | string | null
+    billingState?: StringNullableFilter<"Client"> | string | null
+    billingPostalCode?: StringNullableFilter<"Client"> | string | null
+    billingCountry?: StringNullableFilter<"Client"> | string | null
+    phone?: StringNullableFilter<"Client"> | string | null
+    website?: StringNullableFilter<"Client"> | string | null
+    industry?: StringNullableFilter<"Client"> | string | null
+    parentId?: StringNullableFilter<"Client"> | string | null
+    paymentTerms?: StringNullableFilter<"Client"> | string | null
     id?: StringFilter<"Client"> | string
     name?: StringFilter<"Client"> | string
     codeName?: StringNullableFilter<"Client"> | string | null
@@ -7419,6 +7739,18 @@ export namespace Prisma {
   }
 
   export type ClientOrderByWithRelationInput = {
+    salesforceAccountId?: SortOrderInput | SortOrder
+    accountStatus?: SortOrderInput | SortOrder
+    billingStreet?: SortOrderInput | SortOrder
+    billingCity?: SortOrderInput | SortOrder
+    billingState?: SortOrderInput | SortOrder
+    billingPostalCode?: SortOrderInput | SortOrder
+    billingCountry?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    industry?: SortOrderInput | SortOrder
+    parentId?: SortOrderInput | SortOrder
+    paymentTerms?: SortOrderInput | SortOrder
     id?: SortOrder
     name?: SortOrder
     codeName?: SortOrderInput | SortOrder
@@ -7431,10 +7763,22 @@ export namespace Prisma {
   }
 
   export type ClientWhereUniqueInput = Prisma.AtLeast<{
+    salesforceAccountId?: string
     id?: string
     AND?: ClientWhereInput | ClientWhereInput[]
     OR?: ClientWhereInput[]
     NOT?: ClientWhereInput | ClientWhereInput[]
+    accountStatus?: StringNullableFilter<"Client"> | string | null
+    billingStreet?: StringNullableFilter<"Client"> | string | null
+    billingCity?: StringNullableFilter<"Client"> | string | null
+    billingState?: StringNullableFilter<"Client"> | string | null
+    billingPostalCode?: StringNullableFilter<"Client"> | string | null
+    billingCountry?: StringNullableFilter<"Client"> | string | null
+    phone?: StringNullableFilter<"Client"> | string | null
+    website?: StringNullableFilter<"Client"> | string | null
+    industry?: StringNullableFilter<"Client"> | string | null
+    parentId?: StringNullableFilter<"Client"> | string | null
+    paymentTerms?: StringNullableFilter<"Client"> | string | null
     name?: StringFilter<"Client"> | string
     codeName?: StringNullableFilter<"Client"> | string | null
     status?: EnumClientStatusFilter<"Client"> | $Enums.ClientStatus
@@ -7443,9 +7787,21 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Client"> | Date | string
     updatedAt?: DateTimeFilter<"Client"> | Date | string
     billingAccounts?: BillingAccountListRelationFilter
-  }, "id">
+  }, "id" | "salesforceAccountId">
 
   export type ClientOrderByWithAggregationInput = {
+    salesforceAccountId?: SortOrderInput | SortOrder
+    accountStatus?: SortOrderInput | SortOrder
+    billingStreet?: SortOrderInput | SortOrder
+    billingCity?: SortOrderInput | SortOrder
+    billingState?: SortOrderInput | SortOrder
+    billingPostalCode?: SortOrderInput | SortOrder
+    billingCountry?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    industry?: SortOrderInput | SortOrder
+    parentId?: SortOrderInput | SortOrder
+    paymentTerms?: SortOrderInput | SortOrder
     id?: SortOrder
     name?: SortOrder
     codeName?: SortOrderInput | SortOrder
@@ -7463,6 +7819,18 @@ export namespace Prisma {
     AND?: ClientScalarWhereWithAggregatesInput | ClientScalarWhereWithAggregatesInput[]
     OR?: ClientScalarWhereWithAggregatesInput[]
     NOT?: ClientScalarWhereWithAggregatesInput | ClientScalarWhereWithAggregatesInput[]
+    salesforceAccountId?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    accountStatus?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    billingStreet?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    billingCity?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    billingState?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    billingPostalCode?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    billingCountry?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    website?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    industry?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    parentId?: StringNullableWithAggregatesFilter<"Client"> | string | null
+    paymentTerms?: StringNullableWithAggregatesFilter<"Client"> | string | null
     id?: StringWithAggregatesFilter<"Client"> | string
     name?: StringWithAggregatesFilter<"Client"> | string
     codeName?: StringNullableWithAggregatesFilter<"Client"> | string | null
@@ -7477,6 +7845,16 @@ export namespace Prisma {
     AND?: BillingAccountWhereInput | BillingAccountWhereInput[]
     OR?: BillingAccountWhereInput[]
     NOT?: BillingAccountWhereInput | BillingAccountWhereInput[]
+    salesforceBillingAccountId?: StringNullableFilter<"BillingAccount"> | string | null
+    billingAccountType?: StringNullableFilter<"BillingAccount"> | string | null
+    billingNotes?: StringNullableFilter<"BillingAccount"> | string | null
+    billingFrequency?: StringNullableFilter<"BillingAccount"> | string | null
+    opportunity?: StringNullableFilter<"BillingAccount"> | string | null
+    subscription?: StringNullableFilter<"BillingAccount"> | string | null
+    spoc?: StringNullableFilter<"BillingAccount"> | string | null
+    secondarySpoc?: StringNullableFilter<"BillingAccount"> | string | null
+    costCenter?: StringNullableFilter<"BillingAccount"> | string | null
+    workdayContractNumber?: StringNullableFilter<"BillingAccount"> | string | null
     id?: IntFilter<"BillingAccount"> | number
     projectId?: StringNullableFilter<"BillingAccount"> | string | null
     name?: StringFilter<"BillingAccount"> | string
@@ -7504,6 +7882,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountOrderByWithRelationInput = {
+    salesforceBillingAccountId?: SortOrderInput | SortOrder
+    billingAccountType?: SortOrderInput | SortOrder
+    billingNotes?: SortOrderInput | SortOrder
+    billingFrequency?: SortOrderInput | SortOrder
+    opportunity?: SortOrderInput | SortOrder
+    subscription?: SortOrderInput | SortOrder
+    spoc?: SortOrderInput | SortOrder
+    secondarySpoc?: SortOrderInput | SortOrder
+    costCenter?: SortOrderInput | SortOrder
+    workdayContractNumber?: SortOrderInput | SortOrder
     id?: SortOrder
     projectId?: SortOrderInput | SortOrder
     name?: SortOrder
@@ -7531,10 +7919,20 @@ export namespace Prisma {
   }
 
   export type BillingAccountWhereUniqueInput = Prisma.AtLeast<{
+    salesforceBillingAccountId?: string
     id?: number
     AND?: BillingAccountWhereInput | BillingAccountWhereInput[]
     OR?: BillingAccountWhereInput[]
     NOT?: BillingAccountWhereInput | BillingAccountWhereInput[]
+    billingAccountType?: StringNullableFilter<"BillingAccount"> | string | null
+    billingNotes?: StringNullableFilter<"BillingAccount"> | string | null
+    billingFrequency?: StringNullableFilter<"BillingAccount"> | string | null
+    opportunity?: StringNullableFilter<"BillingAccount"> | string | null
+    subscription?: StringNullableFilter<"BillingAccount"> | string | null
+    spoc?: StringNullableFilter<"BillingAccount"> | string | null
+    secondarySpoc?: StringNullableFilter<"BillingAccount"> | string | null
+    costCenter?: StringNullableFilter<"BillingAccount"> | string | null
+    workdayContractNumber?: StringNullableFilter<"BillingAccount"> | string | null
     projectId?: StringNullableFilter<"BillingAccount"> | string | null
     name?: StringFilter<"BillingAccount"> | string
     description?: StringNullableFilter<"BillingAccount"> | string | null
@@ -7558,9 +7956,19 @@ export namespace Prisma {
     lockedAmounts?: LockedAmountListRelationFilter
     consumedAmounts?: ConsumedAmountListRelationFilter
     accessGrants?: BillingAccountAccessListRelationFilter
-  }, "id">
+  }, "id" | "salesforceBillingAccountId">
 
   export type BillingAccountOrderByWithAggregationInput = {
+    salesforceBillingAccountId?: SortOrderInput | SortOrder
+    billingAccountType?: SortOrderInput | SortOrder
+    billingNotes?: SortOrderInput | SortOrder
+    billingFrequency?: SortOrderInput | SortOrder
+    opportunity?: SortOrderInput | SortOrder
+    subscription?: SortOrderInput | SortOrder
+    spoc?: SortOrderInput | SortOrder
+    secondarySpoc?: SortOrderInput | SortOrder
+    costCenter?: SortOrderInput | SortOrder
+    workdayContractNumber?: SortOrderInput | SortOrder
     id?: SortOrder
     projectId?: SortOrderInput | SortOrder
     name?: SortOrder
@@ -7592,6 +8000,16 @@ export namespace Prisma {
     AND?: BillingAccountScalarWhereWithAggregatesInput | BillingAccountScalarWhereWithAggregatesInput[]
     OR?: BillingAccountScalarWhereWithAggregatesInput[]
     NOT?: BillingAccountScalarWhereWithAggregatesInput | BillingAccountScalarWhereWithAggregatesInput[]
+    salesforceBillingAccountId?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    billingAccountType?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    billingNotes?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    billingFrequency?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    opportunity?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    subscription?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    spoc?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    secondarySpoc?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    costCenter?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
+    workdayContractNumber?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
     id?: IntWithAggregatesFilter<"BillingAccount"> | number
     projectId?: StringNullableWithAggregatesFilter<"BillingAccount"> | string | null
     name?: StringWithAggregatesFilter<"BillingAccount"> | string
@@ -7803,6 +8221,18 @@ export namespace Prisma {
   }
 
   export type ClientCreateInput = {
+    salesforceAccountId?: string | null
+    accountStatus?: string | null
+    billingStreet?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    phone?: string | null
+    website?: string | null
+    industry?: string | null
+    parentId?: string | null
+    paymentTerms?: string | null
     id?: string
     name: string
     codeName?: string | null
@@ -7815,6 +8245,18 @@ export namespace Prisma {
   }
 
   export type ClientUncheckedCreateInput = {
+    salesforceAccountId?: string | null
+    accountStatus?: string | null
+    billingStreet?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    phone?: string | null
+    website?: string | null
+    industry?: string | null
+    parentId?: string | null
+    paymentTerms?: string | null
     id?: string
     name: string
     codeName?: string | null
@@ -7827,6 +8269,18 @@ export namespace Prisma {
   }
 
   export type ClientUpdateInput = {
+    salesforceAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    accountStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    billingStreet?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCity?: NullableStringFieldUpdateOperationsInput | string | null
+    billingState?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPostalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentTerms?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     codeName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7839,6 +8293,18 @@ export namespace Prisma {
   }
 
   export type ClientUncheckedUpdateInput = {
+    salesforceAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    accountStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    billingStreet?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCity?: NullableStringFieldUpdateOperationsInput | string | null
+    billingState?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPostalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentTerms?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     codeName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7851,6 +8317,18 @@ export namespace Prisma {
   }
 
   export type ClientCreateManyInput = {
+    salesforceAccountId?: string | null
+    accountStatus?: string | null
+    billingStreet?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    phone?: string | null
+    website?: string | null
+    industry?: string | null
+    parentId?: string | null
+    paymentTerms?: string | null
     id?: string
     name: string
     codeName?: string | null
@@ -7862,6 +8340,18 @@ export namespace Prisma {
   }
 
   export type ClientUpdateManyMutationInput = {
+    salesforceAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    accountStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    billingStreet?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCity?: NullableStringFieldUpdateOperationsInput | string | null
+    billingState?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPostalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentTerms?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     codeName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7873,6 +8363,18 @@ export namespace Prisma {
   }
 
   export type ClientUncheckedUpdateManyInput = {
+    salesforceAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    accountStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    billingStreet?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCity?: NullableStringFieldUpdateOperationsInput | string | null
+    billingState?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPostalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentTerms?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     codeName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7884,6 +8386,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     projectId?: string | null
     name: string
     description?: string | null
@@ -7909,6 +8421,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedCreateInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -7935,6 +8457,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUpdateInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -7960,6 +8492,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
@@ -7986,6 +8528,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateManyInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -8009,6 +8561,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUpdateManyMutationInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8030,6 +8592,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateManyInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
@@ -8238,21 +8810,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type StringFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringFilter<$PrismaModel> | string
-  }
-
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -8266,6 +8823,21 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type StringFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringFilter<$PrismaModel> | string
   }
 
   export type EnumClientStatusFilter<$PrismaModel = never> = {
@@ -8313,6 +8885,18 @@ export namespace Prisma {
   }
 
   export type ClientCountOrderByAggregateInput = {
+    salesforceAccountId?: SortOrder
+    accountStatus?: SortOrder
+    billingStreet?: SortOrder
+    billingCity?: SortOrder
+    billingState?: SortOrder
+    billingPostalCode?: SortOrder
+    billingCountry?: SortOrder
+    phone?: SortOrder
+    website?: SortOrder
+    industry?: SortOrder
+    parentId?: SortOrder
+    paymentTerms?: SortOrder
     id?: SortOrder
     name?: SortOrder
     codeName?: SortOrder
@@ -8324,6 +8908,18 @@ export namespace Prisma {
   }
 
   export type ClientMaxOrderByAggregateInput = {
+    salesforceAccountId?: SortOrder
+    accountStatus?: SortOrder
+    billingStreet?: SortOrder
+    billingCity?: SortOrder
+    billingState?: SortOrder
+    billingPostalCode?: SortOrder
+    billingCountry?: SortOrder
+    phone?: SortOrder
+    website?: SortOrder
+    industry?: SortOrder
+    parentId?: SortOrder
+    paymentTerms?: SortOrder
     id?: SortOrder
     name?: SortOrder
     codeName?: SortOrder
@@ -8335,6 +8931,18 @@ export namespace Prisma {
   }
 
   export type ClientMinOrderByAggregateInput = {
+    salesforceAccountId?: SortOrder
+    accountStatus?: SortOrder
+    billingStreet?: SortOrder
+    billingCity?: SortOrder
+    billingState?: SortOrder
+    billingPostalCode?: SortOrder
+    billingCountry?: SortOrder
+    phone?: SortOrder
+    website?: SortOrder
+    industry?: SortOrder
+    parentId?: SortOrder
+    paymentTerms?: SortOrder
     id?: SortOrder
     name?: SortOrder
     codeName?: SortOrder
@@ -8343,24 +8951,6 @@ export namespace Prisma {
     endDate?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-  }
-
-  export type StringWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedStringFilter<$PrismaModel>
-    _max?: NestedStringFilter<$PrismaModel>
   }
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -8379,6 +8969,24 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type StringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
   }
 
   export type EnumClientStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -8500,6 +9108,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCountOrderByAggregateInput = {
+    salesforceBillingAccountId?: SortOrder
+    billingAccountType?: SortOrder
+    billingNotes?: SortOrder
+    billingFrequency?: SortOrder
+    opportunity?: SortOrder
+    subscription?: SortOrder
+    spoc?: SortOrder
+    secondarySpoc?: SortOrder
+    costCenter?: SortOrder
+    workdayContractNumber?: SortOrder
     id?: SortOrder
     projectId?: SortOrder
     name?: SortOrder
@@ -8530,6 +9148,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountMaxOrderByAggregateInput = {
+    salesforceBillingAccountId?: SortOrder
+    billingAccountType?: SortOrder
+    billingNotes?: SortOrder
+    billingFrequency?: SortOrder
+    opportunity?: SortOrder
+    subscription?: SortOrder
+    spoc?: SortOrder
+    secondarySpoc?: SortOrder
+    costCenter?: SortOrder
+    workdayContractNumber?: SortOrder
     id?: SortOrder
     projectId?: SortOrder
     name?: SortOrder
@@ -8553,6 +9181,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountMinOrderByAggregateInput = {
+    salesforceBillingAccountId?: SortOrder
+    billingAccountType?: SortOrder
+    billingNotes?: SortOrder
+    billingFrequency?: SortOrder
+    opportunity?: SortOrder
+    subscription?: SortOrder
+    spoc?: SortOrder
+    secondarySpoc?: SortOrder
+    costCenter?: SortOrder
+    workdayContractNumber?: SortOrder
     id?: SortOrder
     projectId?: SortOrder
     name?: SortOrder
@@ -8804,12 +9442,12 @@ export namespace Prisma {
     connect?: BillingAccountWhereUniqueInput | BillingAccountWhereUniqueInput[]
   }
 
-  export type StringFieldUpdateOperationsInput = {
-    set?: string
-  }
-
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type StringFieldUpdateOperationsInput = {
+    set?: string
   }
 
   export type EnumClientStatusFieldUpdateOperationsInput = {
@@ -9070,20 +9708,6 @@ export namespace Prisma {
     update?: XOR<XOR<BillingAccountUpdateToOneWithWhereWithoutAccessGrantsInput, BillingAccountUpdateWithoutAccessGrantsInput>, BillingAccountUncheckedUpdateWithoutAccessGrantsInput>
   }
 
-  export type NestedStringFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringFilter<$PrismaModel> | string
-  }
-
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -9096,6 +9720,20 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedStringFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringFilter<$PrismaModel> | string
   }
 
   export type NestedEnumClientStatusFilter<$PrismaModel = never> = {
@@ -9127,34 +9765,6 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
-  export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[] | ListStringFieldRefInput<$PrismaModel>
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedStringFilter<$PrismaModel>
-    _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -9181,6 +9791,34 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[] | ListStringFieldRefInput<$PrismaModel>
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel>
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedEnumClientStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -9350,6 +9988,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateWithoutClientInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     projectId?: string | null
     name: string
     description?: string | null
@@ -9374,6 +10022,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedCreateWithoutClientInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -9428,6 +10086,16 @@ export namespace Prisma {
     AND?: BillingAccountScalarWhereInput | BillingAccountScalarWhereInput[]
     OR?: BillingAccountScalarWhereInput[]
     NOT?: BillingAccountScalarWhereInput | BillingAccountScalarWhereInput[]
+    salesforceBillingAccountId?: StringNullableFilter<"BillingAccount"> | string | null
+    billingAccountType?: StringNullableFilter<"BillingAccount"> | string | null
+    billingNotes?: StringNullableFilter<"BillingAccount"> | string | null
+    billingFrequency?: StringNullableFilter<"BillingAccount"> | string | null
+    opportunity?: StringNullableFilter<"BillingAccount"> | string | null
+    subscription?: StringNullableFilter<"BillingAccount"> | string | null
+    spoc?: StringNullableFilter<"BillingAccount"> | string | null
+    secondarySpoc?: StringNullableFilter<"BillingAccount"> | string | null
+    costCenter?: StringNullableFilter<"BillingAccount"> | string | null
+    workdayContractNumber?: StringNullableFilter<"BillingAccount"> | string | null
     id?: IntFilter<"BillingAccount"> | number
     projectId?: StringNullableFilter<"BillingAccount"> | string | null
     name?: StringFilter<"BillingAccount"> | string
@@ -9451,6 +10119,18 @@ export namespace Prisma {
   }
 
   export type ClientCreateWithoutBillingAccountsInput = {
+    salesforceAccountId?: string | null
+    accountStatus?: string | null
+    billingStreet?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    phone?: string | null
+    website?: string | null
+    industry?: string | null
+    parentId?: string | null
+    paymentTerms?: string | null
     id?: string
     name: string
     codeName?: string | null
@@ -9462,6 +10142,18 @@ export namespace Prisma {
   }
 
   export type ClientUncheckedCreateWithoutBillingAccountsInput = {
+    salesforceAccountId?: string | null
+    accountStatus?: string | null
+    billingStreet?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    phone?: string | null
+    website?: string | null
+    industry?: string | null
+    parentId?: string | null
+    paymentTerms?: string | null
     id?: string
     name: string
     codeName?: string | null
@@ -9567,6 +10259,18 @@ export namespace Prisma {
   }
 
   export type ClientUpdateWithoutBillingAccountsInput = {
+    salesforceAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    accountStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    billingStreet?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCity?: NullableStringFieldUpdateOperationsInput | string | null
+    billingState?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPostalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentTerms?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     codeName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9578,6 +10282,18 @@ export namespace Prisma {
   }
 
   export type ClientUncheckedUpdateWithoutBillingAccountsInput = {
+    salesforceAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    accountStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    billingStreet?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCity?: NullableStringFieldUpdateOperationsInput | string | null
+    billingState?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPostalCode?: NullableStringFieldUpdateOperationsInput | string | null
+    billingCountry?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    industry?: NullableStringFieldUpdateOperationsInput | string | null
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentTerms?: NullableStringFieldUpdateOperationsInput | string | null
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     codeName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9673,6 +10389,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateWithoutLockedAmountsInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     projectId?: string | null
     name: string
     description?: string | null
@@ -9697,6 +10423,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedCreateWithoutLockedAmountsInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -9738,6 +10474,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUpdateWithoutLockedAmountsInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9762,6 +10508,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateWithoutLockedAmountsInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
@@ -9787,6 +10543,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateWithoutConsumedAmountsInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     projectId?: string | null
     name: string
     description?: string | null
@@ -9811,6 +10577,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedCreateWithoutConsumedAmountsInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -9852,6 +10628,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUpdateWithoutConsumedAmountsInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9876,6 +10662,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateWithoutConsumedAmountsInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
@@ -9901,6 +10697,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateWithoutAccessGrantsInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     projectId?: string | null
     name: string
     description?: string | null
@@ -9925,6 +10731,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedCreateWithoutAccessGrantsInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -9966,6 +10782,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUpdateWithoutAccessGrantsInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9990,6 +10816,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateWithoutAccessGrantsInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
@@ -10015,6 +10851,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountCreateManyClientInput = {
+    salesforceBillingAccountId?: string | null
+    billingAccountType?: string | null
+    billingNotes?: string | null
+    billingFrequency?: string | null
+    opportunity?: string | null
+    subscription?: string | null
+    spoc?: string | null
+    secondarySpoc?: string | null
+    costCenter?: string | null
+    workdayContractNumber?: string | null
     id?: number
     projectId?: string | null
     name: string
@@ -10037,6 +10883,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUpdateWithoutClientInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
@@ -10061,6 +10917,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateWithoutClientInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
@@ -10086,6 +10952,16 @@ export namespace Prisma {
   }
 
   export type BillingAccountUncheckedUpdateManyWithoutClientInput = {
+    salesforceBillingAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    billingAccountType?: NullableStringFieldUpdateOperationsInput | string | null
+    billingNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    billingFrequency?: NullableStringFieldUpdateOperationsInput | string | null
+    opportunity?: NullableStringFieldUpdateOperationsInput | string | null
+    subscription?: NullableStringFieldUpdateOperationsInput | string | null
+    spoc?: NullableStringFieldUpdateOperationsInput | string | null
+    secondarySpoc?: NullableStringFieldUpdateOperationsInput | string | null
+    costCenter?: NullableStringFieldUpdateOperationsInput | string | null
+    workdayContractNumber?: NullableStringFieldUpdateOperationsInput | string | null
     id?: IntFieldUpdateOperationsInput | number
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
