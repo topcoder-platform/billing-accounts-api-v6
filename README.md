@@ -132,6 +132,58 @@ pnpm test:metadata
 
 ## Salesforce integration
 
+### Administrator metadata sync
+
+`POST /v6/billing-accounts/salesforce-sync` (no body) copies every extra metadata
+field listed above from Salesforce into existing clients and billing accounts,
+including `Opportunity__c` → `BillingAccount.opportunity`. It requires a valid
+user JWT with the `administrator` role (case-insensitive). Talent Managers,
+anonymous callers and M2M tokens with billing/client scopes alone are rejected.
+
+Configure `SALESFORCE_API_CONSUMER_KEY`, `SALESFORCE_API_CONSUMER_SECRET`,
+`SALESFORCE_LOGIN_URL` (default `https://topcoder.my.salesforce.com`) and optionally
+`SALESFORCE_API_VERSION` (default `v65.0`). This is the same client-credentials
+Connected App flow used by the Sales report in reports-api-v6; grant the integration
+user read access to Account and Topcoder_Billing_Account__c and all mapped fields.
+Keep credentials in server environment configuration. The existing JWT-bearer
+membership lookup below retains its separate configuration.
+
+Matching uses `Account.Topcoder_Client_id__c` → `Client.id` and
+`Topcoder_Billing_Account__c.TopCoder_Billing_Account_Id__c` → `BillingAccount.id`,
+or an already-stored Salesforce record ID (15/18-character forms are equivalent).
+Names are never used. Duplicate platform IDs, conflicting stored identities and
+Salesforce records owned by another local row are skipped and counted. Missing
+matches leave local rows unchanged. Both Salesforce queries follow every page;
+all local records, including inactive ones, are scanned in batches of 500.
+
+Salesforce nulls clear mirrored metadata. Names, operational status, dates,
+financial fields, local foreign keys, ledger entries and access grants remain
+unchanged. The endpoint creates/deletes no local rows and never writes Salesforce.
+All updates commit in one transaction; upstream, database or timeout failures roll
+back the run. Repeating a completed sync does not rewrite unchanged rows. A
+PostgreSQL advisory transaction lock prevents simultaneous syncs across replicas
+(HTTP 409). The transaction timeout is five minutes; configure gateway/proxy
+timeouts to allow the UI's six-minute request window.
+
+HTTP 200 is returned after commit with counts for each model:
+
+```json
+{
+  "clients": { "scanned": 4, "updated": 1, "unchanged": 1, "unmatched": 1, "conflicted": 1 },
+  "billingAccounts": { "scanned": 2, "updated": 2, "unchanged": 0, "unmatched": 0, "conflicted": 0 }
+}
+```
+
+Missing configuration returns 503; Salesforce authentication/query failures return
+sanitized 502 errors. A failed or disconnected HTTP request can have an uncertain
+outcome; refresh and retry after any active run finishes. The sync is idempotent.
+
+Run `pnpm build && pnpm test:sf-sync`. To also exercise real JWT authorization,
+PostgreSQL writes, rollback and concurrent-run locking, set `TEST_DATABASE_URL`
+to a disposable local database ending in `_test` and deploy migrations first as
+shown in the metadata testing section. Salesforce responses are synthetic in tests;
+no production data or credentials are required.
+
 - This service can resolve billing accounts a user has access to via Salesforce. To enable Salesforce calls, configure the following environment variables in `.env` (see `.env.example`):
   - `SALESFORCE_CLIENT_ID` — Connected App client ID
   - `SALESFORCE_SUBJECT` — integration user username (subject for JWT)

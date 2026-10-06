@@ -20,7 +20,8 @@
     "backfill:engagementPayments": "ts-node scripts/backfill-engagement-payments.ts",
     "verify:engagementPayments": "psql \"$DATABASE_URL\" -f scripts/verify-engagement-payment-backfill.sql",
     "generate:subcontractor-sql": "ts-node scripts/generate-subcontractor-sql.ts",
-    "test:metadata": "node --test tests/salesforce-metadata.test.cjs"
+    "test:metadata": "node --test tests/salesforce-metadata.test.cjs",
+    "test:sf-sync": "node --test tests/salesforce-sync.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.28",
