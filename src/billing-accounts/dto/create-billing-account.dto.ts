@@ -1,3 +1,4 @@
+import { BillingAccountSalesforceMetadataDto } from "./salesforce-metadata.dto";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsBoolean,
@@ -7,7 +8,7 @@ import {
   IsString,
 } from "class-validator";
 
-export class CreateBillingAccountDto {
+export class CreateBillingAccountDto extends BillingAccountSalesforceMetadataDto {
   @ApiProperty({ example: "Acme Innovation Billing Account" })
   @IsString()
   name!: string;

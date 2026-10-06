@@ -1,4 +1,8 @@
 import {
+  BILLING_ACCOUNT_SALESFORCE_FIELDS,
+  pickSalesforceMetadata,
+} from "../common/salesforce-metadata";
+import {
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -333,8 +337,12 @@ export class BillingAccountsService {
   ) {}
 
   /**
-   * List billing accounts one or more user IDs have access to (via Salesforce resource object).
-   * Accepts a single userId (number).
+   * Lists Salesforce-authorized billing-account summaries with local metadata.
+   * Salesforce remains the source of membership and legacy summary fields.
+   * @param userId Topcoder user ID used by the Salesforce resource lookup.
+   * @returns Summaries enriched with nullable metadata and client details when
+   * a local account exists; unmatched Salesforce summaries remain available.
+   * @throws Propagates Salesforce authentication/query and database errors.
    */
   async listByUserId(userId: number) {
     const { accessToken, instanceUrl } = await this.salesforce.authenticate();
@@ -350,7 +358,37 @@ export class BillingAccountsService {
       accessToken,
       instanceUrl,
     );
-    return res;
+    const ids = res
+      .map((account) => account.tcBillingAccountId)
+      .filter((id): id is number => Number.isSafeInteger(id));
+    if (ids.length === 0) return res;
+
+    // Select metadata only: this endpoint also serves copilots and must not
+    // expose raw markup or other financial fields through enrichment.
+    const accounts = await this.prisma.billingAccount.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        salesforceBillingAccountId: true,
+        billingAccountType: true,
+        billingNotes: true,
+        billingFrequency: true,
+        opportunity: true,
+        subscription: true,
+        spoc: true,
+        secondarySpoc: true,
+        costCenter: true,
+        workdayContractNumber: true,
+        client: true,
+      },
+    });
+    const metadataById = new Map(
+      accounts.map(({ id, ...metadata }) => [id, metadata]),
+    );
+    return res.map((account) => ({
+      ...account,
+      ...metadataById.get(account.tcBillingAccountId),
+    }));
   }
 
   /**
@@ -496,6 +534,7 @@ export class BillingAccountsService {
   async create(dto: CreateBillingAccountDto, createdBy?: string) {
     return this.prisma.billingAccount.create({
       data: {
+        ...pickSalesforceMetadata(dto, BILLING_ACCOUNT_SALESFORCE_FIELDS),
         name: dto.name,
         description: dto.description,
         status: (dto.status as any) || "ACTIVE",
@@ -666,6 +705,7 @@ export class BillingAccountsService {
     return this.prisma.billingAccount.update({
       where: { id: billingAccountId },
       data: {
+        ...pickSalesforceMetadata(dto, BILLING_ACCOUNT_SALESFORCE_FIELDS),
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.description !== undefined
           ? { description: dto.description }

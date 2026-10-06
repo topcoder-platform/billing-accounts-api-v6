@@ -79,7 +79,7 @@ export class ClientsController {
     buildOperationDoc({
       summary: "Get a client",
       description:
-        "Fetch a client by its identifier, including billing accounts and metadata.",
+        "Fetch a client by its identifier, including Salesforce metadata and billing contact fields.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.READ_CLIENT, SCOPES.ALL_CLIENT],
     }),
@@ -98,7 +98,7 @@ export class ClientsController {
     buildOperationDoc({
       summary: "Create a client",
       description:
-        "Create a new client with optional code name, dates, and status.",
+        "Create a new client with optional code name, dates, status, and nullable Salesforce metadata and billing contact fields.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.CREATE_CLIENT, SCOPES.ALL_CLIENT],
     }),
@@ -134,7 +134,7 @@ export class ClientsController {
     buildOperationDoc({
       summary: "Update a client",
       description:
-        "Update client metadata, billing account associations, or status.",
+        "Update client metadata or status. Omit Salesforce metadata fields to preserve them, or send null to clear them.",
       jwtRoles: [ADMIN_ROLE],
       m2mScopes: [SCOPES.UPDATE_CLIENT, SCOPES.ALL_CLIENT],
     }),

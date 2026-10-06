@@ -1,3 +1,7 @@
+import {
+  CLIENT_SALESFORCE_FIELDS,
+  pickSalesforceMetadata,
+} from "../common/salesforce-metadata";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../common/prisma.service";
 import { Prisma } from "@prisma/client";
@@ -70,6 +74,7 @@ export class ClientsService {
     return this.prisma.client.update({
       where: { id: clientId },
       data: {
+        ...pickSalesforceMetadata(dto, CLIENT_SALESFORCE_FIELDS),
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.codeName !== undefined ? { codeName: dto.codeName } : {}),
         ...(dto.status !== undefined ? { status: dto.status as any } : {}),
@@ -86,6 +91,7 @@ export class ClientsService {
   async create(dto: CreateClientDto) {
     return this.prisma.client.create({
       data: {
+        ...pickSalesforceMetadata(dto, CLIENT_SALESFORCE_FIELDS),
         name: dto.name,
         codeName: dto.codeName,
         status: (dto.status || "ACTIVE") as any,
