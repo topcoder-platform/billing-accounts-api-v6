@@ -1,3 +1,4 @@
+import { auth } from 'tc-core-library-js';
 // src/auth/guards/roles.guard.ts
 import {
   CanActivate,
@@ -9,10 +10,12 @@ import { Reflector } from "@nestjs/core";
 import { ROLES_KEY } from "../decorators/roles.decorator";
 import { SCOPES_KEY } from "../decorators/scopes.decorator";
 
+/** Applies route role/scope alternatives to the shared verified principal; scopes are exact. */
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
+  /** Evaluates context metadata; returns access or throws ForbiddenException on denial. */
   canActivate(context: ExecutionContext): boolean {
     const required = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
       context.getHandler(),
@@ -39,29 +42,15 @@ export class RolesGuard implements CanActivate {
     const ok = normalizedRoles.some((role: string) =>
       normalizedRequiredRoles.includes(role),
     );
-    if (ok) return true;
+    if (user.kind === 'user' && ok) return true;
 
     const fallbackScopes = this.reflector.getAllAndOverride<string[]>(
       SCOPES_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    if (fallbackScopes && fallbackScopes.length > 0) {
-      const normalizedFallbackScopes = fallbackScopes.map((scope) =>
-        scope.trim().toLowerCase(),
-      );
-      const scopes: string[] = Array.isArray(user.scopes)
-        ? user.scopes
-        : (user.scope || "")
-            .split(" ")
-            .map((s: string) => s.trim())
-            .filter(Boolean);
-      const normalizedScopes = scopes.map((scope) => scope.toLowerCase());
-
-      const scopeOk = normalizedScopes.some((scope) =>
-        normalizedFallbackScopes.includes(scope),
-      );
-      if (scopeOk) return true;
+    if (fallbackScopes?.length && auth.hasScopes(user, fallbackScopes, 'any')) {
+      return true;
     }
 
     throw new ForbiddenException("Insufficient role or scope");

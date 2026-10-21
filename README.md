@@ -296,3 +296,8 @@ no production data or credentials are required.
   - Search/list: `GET /v6/billing-accounts?{filters}` (supports `userId`, `clientId`, `status`, and date range filters)
   - Detail: `GET /v6/billing-accounts/{id}`
   - Access check: `GET /v6/billing-accounts/{id}/users/{userId}/access`
+
+## Keycloak migration branch
+
+On `keycloak_m2M`, follow [Keycloak configuration and rollout](docs/keycloak-m2m.md).
+Legacy Auth0 M2M settings below do not configure token issuance on this branch.

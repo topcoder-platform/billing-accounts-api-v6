@@ -1,30 +1,42 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
-import { Request, Response, NextFunction } from "express";
-import * as tcCore from "tc-core-library-js";
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+import { middleware } from 'tc-core-library-js';
 
+/** Uses the common validator for member and Keycloak service principals on HTTP requests. */
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  private jwtAuthenticator: any;
+  private readonly authenticator: ReturnType<typeof middleware.jwtAuthenticator>;
 
+  /**
+   * Initializes explicit Keycloak configuration and configured member trust.
+   * Uses process environment configuration; takes no arguments.
+   * @throws Error when shared authentication configuration is invalid.
+   */
   constructor() {
-    // The library exposes middleware.jwtAuthenticator(AUTH_SECRET?) and will attach req.authUser
-    // See appirio-tech/tc-core-library-js README for details.
-    const secret = process.env.AUTH_SECRET;
-    const validIssuers =
-      process.env.VALID_ISSUERS ||
-      '["https://api.topcoder.com","https://topcoder-dev.auth0.com/"]';
-    this.jwtAuthenticator = tcCore.middleware.jwtAuthenticator({
-      AUTH_SECRET: secret,
-      VALID_ISSUERS: validIssuers,
+    const configuredIssuers = process.env.VALID_ISSUERS || '[]';
+    const issuers = configuredIssuers.trim().startsWith('[')
+      ? configuredIssuers
+      : JSON.stringify(configuredIssuers.split(',').map(value => value.trim()));
+    this.authenticator = middleware.jwtAuthenticator({
+      AUTH_SECRET: process.env.AUTH_SECRET,
+      VALID_ISSUERS: issuers,
     });
   }
 
-  use(req: Request, res: Response, next: NextFunction) {
-    // If no Authorization header is present, continue (many GET endpoints may be public).
-    // Controllers/guards can still enforce roles/scopes where required.
-    if (!req.headers["authorization"]) {
-      return next();
-    }
-    return this.jwtAuthenticator(req, res, next);
+  /**
+   * Attaches a verified principal when a bearer header is present; public routes remain anonymous.
+   * @param req Request containing the bearer header.
+   * @param res Response passed to the shared middleware.
+   * @param next Express continuation receiving sanitized authentication failures.
+   * @returns Nothing; continues through next. Invalid tokens yield UnauthorizedException.
+   */
+  use(req: Request, res: Response, next: NextFunction): void {
+    const candidates = [req.headers.authorization];
+    const authorization = candidates.flatMap(value => value || []).find(Boolean);
+    if (!authorization) { next(); return; }
+    req.headers.authorization = authorization;
+    this.authenticator(req, res, (error?: Error) => {
+      next(error ? new UnauthorizedException('Invalid authentication token.') : undefined);
+    });
   }
 }

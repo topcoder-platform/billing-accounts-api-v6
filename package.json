@@ -21,7 +21,8 @@
     "verify:engagementPayments": "psql \"$DATABASE_URL\" -f scripts/verify-engagement-payment-backfill.sql",
     "generate:subcontractor-sql": "ts-node scripts/generate-subcontractor-sql.ts",
     "test:metadata": "node --test tests/salesforce-metadata.test.cjs",
-    "test:sf-sync": "node --test tests/salesforce-sync.test.cjs"
+    "test:sf-sync": "node --test tests/salesforce-sync.test.cjs",
+    "test:keycloak": "node --test test/keycloak-auth.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.28",
@@ -42,7 +43,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.0",
-    "tc-core-library-js": "github:topcoder-platform/tc-core-library-js#master"
+    "tc-core-library-js": "https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c262f4aca971904f308085bdeaaed35cdf3cfa7d"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
