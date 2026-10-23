@@ -6,7 +6,7 @@ const { ConfigService } = require('@nestjs/config');
 const { AuthMiddleware } = require('../dist/auth/auth.middleware');
 
 Object.assign(process.env, {
-  M2M_PROVIDER: 'keycloak',
+  USE_KEYCLOAK: 'true',
   KEYCLOAK_ISSUER: 'https://keycloak.example.test/realms/test',
   KEYCLOAK_AUDIENCE: 'https://api.example.test',
   KEYCLOAK_TOKEN_URL: 'https://keycloak.example.test/m2m/token',
@@ -78,4 +78,28 @@ test('route scopes are exact and never grant member access', () => {
   denied(guard, { kind: 'service', isMachine: true, scopes: ['READ:TEST'] });
   denied(guard, { kind: 'service', isMachine: true, scopes: ['write:test'] });
   denied(guard, { kind: 'user', isMachine: false, scopes: ['read:test'], roles: [] });
+});
+
+/** Constructs the compiled middleware with the given overrides and no other Keycloak settings; throws on invalid configuration. */
+function startWith(overrides) {
+  const saved = { ...process.env };
+  for (const name of ['USE_KEYCLOAK', 'KEYCLOAK_ISSUER', 'KEYCLOAK_AUDIENCE', 'KEYCLOAK_TOKEN_URL']) {
+    delete process.env[name];
+  }
+  Object.assign(process.env, overrides);
+  try { return new AuthMiddleware(new ConfigService(process.env)); } finally { process.env = saved; }
+}
+
+test('USE_KEYCLOAK=false or unset starts without Keycloak settings and accepts Auth0 machine trust', () => {
+  assert.doesNotThrow(() => startWith({ USE_KEYCLOAK: 'false' }));
+  assert.doesNotThrow(() => startWith({}));
+  assert.doesNotThrow(() => startWith({ USE_KEYCLOAK: 'false',
+    LEGACY_M2M_ISSUERS: '["https://members.example.test"]', LEGACY_M2M_AUDIENCE: 'https://m2m.example.test/' }));
+});
+
+test('USE_KEYCLOAK=true requires the Keycloak settings; other values fail fast', () => {
+  assert.throws(() => startWith({ USE_KEYCLOAK: 'true' }), TypeError);
+  assert.doesNotThrow(() => startWith({ USE_KEYCLOAK: 'TRUE', KEYCLOAK_ISSUER: 'https://keycloak.example.test/realms/test',
+    KEYCLOAK_AUDIENCE: 'https://api.example.test', KEYCLOAK_TOKEN_URL: 'https://keycloak.example.test/m2m/token' }));
+  assert.throws(() => startWith({ USE_KEYCLOAK: 'keycloak' }), /USE_KEYCLOAK must be true or false/);
 });

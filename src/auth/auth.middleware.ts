@@ -2,15 +2,21 @@ import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/commo
 import { Request, Response, NextFunction } from 'express';
 import { middleware } from 'tc-core-library-js';
 
-/** Uses the common validator for member and Keycloak service principals on HTTP requests. */
+/**
+ * Uses the common validator for member and service principals on HTTP requests.
+ * `USE_KEYCLOAK` (read by tc-core-library-js) selects which machine tokens are trusted.
+ */
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   private readonly authenticator: ReturnType<typeof middleware.jwtAuthenticator>;
 
   /**
-   * Initializes explicit Keycloak configuration and configured member trust.
-   * Uses process environment configuration; takes no arguments.
-   * @throws Error when shared authentication configuration is invalid.
+   * Builds the shared validator from the environment; takes no arguments.
+   * `USE_KEYCLOAK=true` requires `KEYCLOAK_ISSUER`, `KEYCLOAK_AUDIENCE` and
+   * `KEYCLOAK_TOKEN_URL`. Unset or `false` (Auth0) needs none of them and trusts Auth0
+   * machine tokens through `LEGACY_M2M_ISSUERS`/`LEGACY_M2M_AUDIENCE`. Member tokens use
+   * `AUTH_SECRET` and `VALID_ISSUERS` in both modes.
+   * @throws TypeError when `USE_KEYCLOAK` is not true/false or the selected settings are invalid.
    */
   constructor() {
     const configuredIssuers = process.env.VALID_ISSUERS || '[]';
