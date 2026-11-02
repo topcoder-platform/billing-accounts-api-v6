@@ -54,7 +54,7 @@
 
 ## Quickstart
 
-Requires Node.js 26.5.1, matching `.nvmrc` and the production container.
+Requires Node.js 26.12.1, matching `.nvmrc` and the production container.
 The production container runs as the unprivileged `app` user with UID and GID
 `10001`; database migrations and the API process use that identity.
 
@@ -330,3 +330,14 @@ Node major. The runtime keeps Alpine's dynamically linked Node and system
 libraries. Existing non-root users and application entrypoints are preserved.
 Build stages using a versioned official Node image retain their configured
 version, and pnpm build arguments are explicitly declared in the consuming stage.
+
+## Dependency security validation
+
+The November 2026 refresh pins `tc-core-library-js` to a reviewed immutable
+revision and upgrades vulnerable transitive dependencies. Legacy glob consumers
+use the tested minimatch adapter in `tools/minimatch-compat`. Run
+`pnpm test:dependency-compat` after changing matcher overrides. Run PostgreSQL
+suites together with `node --test --test-concurrency=1 tests/*.test.cjs` against
+a fresh local `*_test` database, because the Salesforce sync suite asserts
+whole-database scan counts. JWT fixtures use a secret of at least 32 bytes and
+distinguish authentication failures (401) from authorization failures (403).
