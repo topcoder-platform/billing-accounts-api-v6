@@ -18,11 +18,7 @@ export class QueryClientsDto {
   @IsOptional() @IsDateString() endDateTo?: string;
 
   @IsOptional() @IsString() sortBy?:
-    | "name"
-    | "startDate"
-    | "endDate"
-    | "status"
-    | "createdAt";
+    "name" | "startDate" | "endDate" | "status" | "createdAt";
   @IsOptional() @IsIn(["asc", "desc"]) sortOrder?: "asc" | "desc";
 
   @IsOptional()

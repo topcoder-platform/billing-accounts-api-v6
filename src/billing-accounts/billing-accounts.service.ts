@@ -458,14 +458,14 @@ export class BillingAccountsService {
       where.startDate = {
         ...(startDateFrom ? { gte: new Date(startDateFrom) } : {}),
         ...(startDateTo ? { lte: new Date(startDateTo) } : {}),
-      } as any;
+      };
     }
 
     if (endDateFrom || endDateTo) {
       where.endDate = {
         ...(endDateFrom ? { gte: new Date(endDateFrom) } : {}),
         ...(endDateTo ? { lte: new Date(endDateTo) } : {}),
-      } as any;
+      };
     }
 
     // Fetch page
