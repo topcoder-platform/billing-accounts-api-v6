@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 2,
+  "environment": "prod",
+  "accountId": "409275337247",
+  "region": "us-east-1",
+  "deployRoleArn": "arn:aws:iam::409275337247:role/billing-accounts-api-v6-prod-deploy",
+  "taskRoleArn": null,
+  "executionRoleArn": "arn:aws:iam::409275337247:role/ecsTaskExecutionRole",
+  "cluster": "tc-billing-account-serverless",
+  "service": "billing-accounts-api-v6",
+  "taskFamily": "billing-accounts-api-v6",
+  "circleciOrgId": "947bef5e-1669-415d-b83c-4fc85155b7df",
+  "circleciProjectId": "ea7b2dac-084a-41c4-846b-d77ac04cf474",
+  "repository": "github.com/topcoder-platform/billing-accounts-api-v6",
+  "branch": "master",
+  "images": {
+    "billing-accounts-api-v6": "billing-accounts-api-v6"
+  }
+}

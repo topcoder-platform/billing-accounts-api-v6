@@ -159,7 +159,7 @@ test('real JWT endpoint and database: metadata, idempotency, null clears, rollba
     const app = await NestFactory.create(TestModule, { logger: false });
     const previousSecret = process.env.AUTH_SECRET;
     const previousIssuers = process.env.VALID_ISSUERS;
-    process.env.AUTH_SECRET = 'test-only-sf-sync-secret';
+    process.env.AUTH_SECRET = 'test-only-sf-sync-secret-at-least-32-bytes';
     process.env.VALID_ISSUERS = '["https://sync-test.example"]';
     const auth = new AuthMiddleware();
     app.use(auth.use.bind(auth));
@@ -175,12 +175,16 @@ test('real JWT endpoint and database: metadata, idempotency, null clears, rollba
     const token = payload => jwt.sign(payload, process.env.AUTH_SECRET, { issuer: 'https://sync-test.example', expiresIn: '1h' });
     /** Executes the real HTTP endpoint with an optional bearer token. */
     const post = bearer => fetch(endpoint, { method: 'POST', headers: bearer ? { Authorization: `Bearer ${bearer}` } : {} });
-    for (const bearer of [undefined, 'invalid', token({ roles: ['Talent Manager'], userId: '123' }),
-      jwt.sign({ roles: ['administrator'], userId: '123' }, 'wrong-signature', { issuer: 'https://sync-test.example' }),
-      jwt.sign({ roles: ['administrator'], userId: '123' }, process.env.AUTH_SECRET,
-        { issuer: 'https://sync-test.example', expiresIn: -1 }),
-      token({ gty: 'client-credentials', azp: 'test', scope: 'all:billing-account all:client' })]) {
-      assert.equal((await post(bearer)).status, 403);
+    for (const [bearer, expectedStatus] of [
+      [undefined, 403],
+      ['invalid', 401],
+      [token({ roles: ['Talent Manager'], userId: '123' }), 403],
+      [jwt.sign({ roles: ['administrator'], userId: '123' }, 'wrong-signature', { issuer: 'https://sync-test.example' }), 401],
+      [jwt.sign({ roles: ['administrator'], userId: '123' }, process.env.AUTH_SECRET,
+        { issuer: 'https://sync-test.example', expiresIn: -3600 }), 401],
+      [token({ gty: 'client-credentials', azp: 'test', scope: 'all:billing-account all:client' }), 401],
+    ]) {
+      assert.equal((await post(bearer)).status, expectedStatus);
     }
     assert.equal(queried, 0);
     const admin = token({ roles: ['Administrator'], userId: '123' });

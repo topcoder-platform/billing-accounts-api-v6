@@ -7,13 +7,15 @@ export class AuthMiddleware implements NestMiddleware {
   private jwtAuthenticator: any;
 
   constructor() {
-    // The library exposes middleware.jwtAuthenticator(AUTH_SECRET?) and will attach req.authUser
+    // The library exposes createJwtAuthenticator(AUTH_SECRET?) and will attach req.authUser
     // See appirio-tech/tc-core-library-js README for details.
     const secret = process.env.AUTH_SECRET;
     const validIssuers =
       process.env.VALID_ISSUERS ||
       '["https://api.topcoder.com","https://topcoder-dev.auth0.com/"]';
-    this.jwtAuthenticator = tcCore.middleware.jwtAuthenticator({
+    this.jwtAuthenticator = tcCore.createJwtAuthenticator({
+      AUTH0_AUDIENCE: process.env.AUTH0_AUDIENCE,
+      JWT_AUDIENCE: process.env.JWT_AUDIENCE,
       AUTH_SECRET: secret,
       VALID_ISSUERS: validIssuers,
     });
