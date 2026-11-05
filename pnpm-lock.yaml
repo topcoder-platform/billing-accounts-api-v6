@@ -31,7 +31,7 @@ overrides:
   browserslist: 4.28.8
   axios@<1: 0.34.0
   axios@>=1: 1.21.0
-  tc-core-library-js: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/2067e74f73d7fe3442c96f375fc97f8486f79be4
+  tc-core-library-js: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c2df92b2227089909ab6e229df0ec6b658bb431a
   deepmerge-ts: 8.0.0
   defu: 6.1.7
   effect@^3: 3.22.0
@@ -102,8 +102,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(express@5.2.1(supports-color@7.2.0))
       tc-core-library-js:
-        specifier: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/2067e74f73d7fe3442c96f375fc97f8486f79be4
-        version: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/2067e74f73d7fe3442c96f375fc97f8486f79be4(supports-color@7.2.0)
+        specifier: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c2df92b2227089909ab6e229df0ec6b658bb431a
+        version: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c2df92b2227089909ab6e229df0ec6b658bb431a(supports-color@7.2.0)
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.3.7
@@ -1557,9 +1557,9 @@ packages:
     resolution: {integrity: sha512-U+/AXT6LWsxnj2vz9HeUuPWBNgdWxjyIEjEPdbJARC9txmgPzo2VEdqnFo4hHaNyMPtycyVJrSaQYeQv/PoyyA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  tc-core-library-js@https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/2067e74f73d7fe3442c96f375fc97f8486f79be4:
-    resolution: {gitHosted: true, integrity: sha512-4xzx6ycEdy8Rs5BpIOUhg/YX0cUUQpOCtTM60vcb9JF4XvqI1fLfIDmHNvZNek49dBo1Il1Lp8O/HLhKfLhhVg==, tarball: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/2067e74f73d7fe3442c96f375fc97f8486f79be4}
-    version: 4.0.0-rc.4
+  tc-core-library-js@https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c2df92b2227089909ab6e229df0ec6b658bb431a:
+    resolution: {gitHosted: true, integrity: sha512-n+4KUOeV4LEIsTI/R216dBc6bUkbSyO/2O0LpoY3Hk7eqKsRQFUHloB3y0hfK/v1rzf8qYQxTdv8ikeRGBn4pQ==, tarball: https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c2df92b2227089909ab6e229df0ec6b658bb431a}
+    version: 4.0.0-rc.2.1
     engines: {node: '>=22.13'}
 
   thread-stream@3.2.0:
@@ -3146,7 +3146,7 @@ snapshots:
       '@dual-bundle/import-meta-resolve': 4.2.1
       '@pkgr/core': 0.3.6
 
-  tc-core-library-js@https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/2067e74f73d7fe3442c96f375fc97f8486f79be4(supports-color@7.2.0):
+  tc-core-library-js@https://codeload.github.com/topcoder-platform/tc-core-library-js/tar.gz/c2df92b2227089909ab6e229df0ec6b658bb431a(supports-color@7.2.0):
     dependencies:
       '@types/jsonwebtoken': 9.0.10
       jsonwebtoken: 9.0.3
