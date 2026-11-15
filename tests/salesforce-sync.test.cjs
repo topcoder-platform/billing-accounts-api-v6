@@ -172,15 +172,15 @@ test('real JWT endpoint and database: metadata, idempotency, null clears, rollba
     });
     const endpoint = `${await app.getUrl()}/v6/billing-accounts/salesforce-sync`;
     /** Signs a synthetic user token for the real authentication middleware. */
-    const token = payload => jwt.sign(payload, process.env.AUTH_SECRET, { issuer: 'https://sync-test.example', expiresIn: '1h' });
+    const token = payload => jwt.sign({ emailVerified: true, ...payload }, process.env.AUTH_SECRET, { issuer: 'https://sync-test.example', expiresIn: '1h' });
     /** Executes the real HTTP endpoint with an optional bearer token. */
     const post = bearer => fetch(endpoint, { method: 'POST', headers: bearer ? { Authorization: `Bearer ${bearer}` } : {} });
     for (const [bearer, expectedStatus] of [
       [undefined, 403],
       ['invalid', 401],
       [token({ roles: ['Talent Manager'], userId: '123' }), 403],
-      [jwt.sign({ roles: ['administrator'], userId: '123' }, 'wrong-signature', { issuer: 'https://sync-test.example' }), 401],
-      [jwt.sign({ roles: ['administrator'], userId: '123' }, process.env.AUTH_SECRET,
+      [jwt.sign({ emailVerified: true, roles: ['administrator'], userId: '123' }, 'wrong-signature', { issuer: 'https://sync-test.example' }), 401],
+      [jwt.sign({ emailVerified: true, roles: ['administrator'], userId: '123' }, process.env.AUTH_SECRET,
         { issuer: 'https://sync-test.example', expiresIn: -3600 }), 401],
       [token({ gty: 'client-credentials', azp: 'test', scope: 'all:billing-account all:client' }), 401],
     ]) {
