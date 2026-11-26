@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from '../src/prisma-adapter';
 /* eslint-disable no-console */
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
@@ -27,7 +28,7 @@ type Stats = {
   missingBillingAccount: number;
 };
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
 
 function usage(): never {
   console.error('Usage: npm run backfill:clientIds -- <time_oltp:client_project_*.json> [moreFiles...]');

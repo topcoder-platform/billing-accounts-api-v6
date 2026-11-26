@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from "../prisma-adapter";
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { Prisma, PrismaClient } from "@prisma/client";
 import type { BudgetEntryReference } from "./budget-entry.util";
@@ -873,7 +874,7 @@ export class ExternalBudgetEntryLookupService implements OnModuleDestroy {
           ? parseInt(process.env.BA_SERVICE_PRISMA_TIMEOUT, 10)
           : 10000,
       },
-      datasources: { db: { url: databaseUrl } },
+      adapter: createPostgresAdapter(databaseUrl),
     });
   }
 

@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from '../src/prisma-adapter';
 // scripts/import-markup.ts
 /* eslint-disable no-console */
 import { Prisma, PrismaClient } from '@prisma/client';
@@ -54,7 +55,7 @@ async function main() {
   const rows = readContestFees(inputPath);
   console.log(`Parsed ${rows.length} record(s).`);
 
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
   let updated = 0;
   let skipped = 0;
 

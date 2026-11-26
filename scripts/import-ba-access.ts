@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from '../src/prisma-adapter';
 // scripts/import-ba-access.ts
 /* eslint-disable no-console */
 import { PrismaClient } from '@prisma/client';
@@ -71,8 +72,8 @@ async function main() {
 
   console.log(`Loaded ${projectManagers.length} project_manager and ${userAccounts.length} user_account records.`);
 
-  const prisma = new PrismaClient();
-  const memberPrisma = new PrismaClient({ datasources: { db: { url: MEMBER_DB_URL } } });
+  const prisma = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
+  const memberPrisma = new PrismaClient({ adapter: createPostgresAdapter(MEMBER_DB_URL) });
 
   // Build lookup for user_account by id
   const userById = new Map<string, LegacyUserAccount>();
