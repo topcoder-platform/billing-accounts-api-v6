@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from "../prisma-adapter";
 import { Injectable, Logger } from "@nestjs/common";
 import { Prisma, PrismaClient } from "@prisma/client";
 
@@ -28,7 +29,7 @@ export class MembersLookupService {
           ? parseInt(process.env.BA_SERVICE_PRISMA_TIMEOUT, 10)
           : 10000,
       },
-      datasources: { db: { url } },
+      adapter: createPostgresAdapter(url),
     });
     this.initialized = true;
   }

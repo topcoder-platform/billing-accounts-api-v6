@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from '../src/prisma-adapter';
 // scripts/import-legacy.ts
 /* eslint-disable no-console */
 import { Prisma, PrismaClient } from '@prisma/client';
@@ -51,7 +52,7 @@ type LegacyBundle = {
   ['time_oltp:project_challenge_budget']?: LegacyChallengeBudget[];
 };
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
 
 function toBool(v: any): boolean | undefined {
   if (v === undefined || v === null || v === '') return undefined;

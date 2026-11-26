@@ -1,3 +1,4 @@
+import { createPostgresAdapter } from '../src/prisma-adapter';
 /* eslint-disable no-console */
 import 'dotenv/config';
 import { Prisma, PrismaClient } from '@prisma/client';
@@ -421,7 +422,7 @@ function requireDatabaseUrl(names: string[]): string {
  */
 function createExternalClient(databaseUrl: string): PrismaClient {
   return new PrismaClient({
-    datasources: { db: { url: databaseUrl } },
+    adapter: createPostgresAdapter(databaseUrl),
   });
 }
 
@@ -1740,7 +1741,7 @@ async function main(): Promise<void> {
     'PROJECT_DB_URL',
   ]);
 
-  const billingClient = new PrismaClient();
+  const billingClient = new PrismaClient({ adapter: createPostgresAdapter(process.env.DATABASE_URL) });
   const financeClient = createExternalClient(financeDbUrl);
   const engagementsClient = createExternalClient(engagementsDbUrl);
   const projectsClient = createExternalClient(projectsDbUrl);

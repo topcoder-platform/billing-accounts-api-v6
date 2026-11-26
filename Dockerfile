@@ -3,11 +3,9 @@ ARG NODE_VERSION=26.13.1
 
 FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS base
 ARG NODE_VERSION
-# Alpine replaces old APK patch versions. Keep the configured Node major while
-# accepting maintained patch releases and verify the selected runtime below.
 RUN apk upgrade --no-cache \
-  && apk add --no-cache 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' "nodejs-current~${NODE_VERSION%%.*}" "nodejs-current>=26.13.1-r0" "zlib>=1.4-r0" \
-  && test "$(node -p 'process.versions.node.split(".")[0]')" = "${NODE_VERSION%%.*}" \
+  && apk add --no-cache 'libcrypto3>=3.5.9-r1' 'libssl3>=3.5.9-r1' 'nodejs-current~26.13.1' "zlib>=1.4-r0" \
+  && test "$(node -p 'process.versions.node')" = "${NODE_VERSION}" \
   && addgroup -S -g 10001 app \
   && adduser -S -D -u 10001 -G app -h /home/app app
 WORKDIR /usr/src/app
@@ -21,6 +19,7 @@ RUN apk add --no-cache npm \
 FROM tooling AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tools ./tools
+COPY prisma.config.ts ./
 COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
@@ -34,6 +33,7 @@ RUN pnpm build && pnpm exec eslint "src/**/*.ts" && node --test tests/*.test.cjs
 FROM tooling AS prod-deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY tools ./tools
+COPY prisma.config.ts ./
 COPY prisma ./prisma
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts \
   && ./node_modules/.bin/prisma generate
@@ -47,6 +47,7 @@ WORKDIR /usr/src/app
 # Copy built artifacts and runtime deps
 COPY --chown=app:app --from=build /usr/src/app/dist ./dist
 COPY --chown=app:app --from=prod-deps /usr/src/app/node_modules ./node_modules
+COPY --chown=app:app --from=build /usr/src/app/prisma.config.ts ./prisma.config.ts
 COPY --chown=app:app --from=build /usr/src/app/prisma ./prisma
 COPY --chown=app:app --from=build /usr/src/app/entrypoint.sh /entrypoint.sh
 
