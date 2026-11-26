@@ -1,18 +1,15 @@
 generator client {
-  provider      = "prisma-client-js"
+  provider = "prisma-client-js"
   // Ensure Alpine uses the OpenSSL 3-compatible binary
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 generator externalClient {
-  provider      = "prisma-client-js"
-  output        = "../packages/ba-prisma-client"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
+  output   = "../packages/ba-prisma-client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Client {
